@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Dumbbell, Plus, Calendar, Clock, Flame, Trash2, Edit } from 'lucide-react'
+import { Dumbbell, Plus, Calendar, Clock, Flame, Trash2, Edit, Save, X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
@@ -25,6 +25,8 @@ export default function WorkoutsPage() {
     const [showAddForm, setShowAddForm] = useState(false)
     const [workouts, setWorkouts] = useState(mockWorkouts)
     const [selectedType, setSelectedType] = useState<string | null>(null)
+    const [editingWorkoutId, setEditingWorkoutId] = useState<number | null>(null)
+    const [editedExercises, setEditedExercises] = useState<string>('')
 
     const filteredWorkouts = selectedType
         ? workouts.filter(w => w.type === selectedType)
@@ -32,6 +34,29 @@ export default function WorkoutsPage() {
 
     const totalDuration = filteredWorkouts.reduce((acc, w) => acc + w.duration, 0)
     const totalCalories = filteredWorkouts.reduce((acc, w) => acc + (w.calories || 0), 0)
+
+    const handleEditExercises = (workoutId: number, exercises: string[]) => {
+        setEditingWorkoutId(workoutId)
+        setEditedExercises(exercises.join(', '))
+    }
+
+    const handleSaveExercises = (workoutId: number) => {
+        const exerciseList = editedExercises
+            .split(',')
+            .map(e => e.trim())
+            .filter(e => e.length > 0)
+
+        setWorkouts(workouts.map(w =>
+            w.id === workoutId ? { ...w, exercises: exerciseList } : w
+        ))
+        setEditingWorkoutId(null)
+        setEditedExercises('')
+    }
+
+    const handleCancelEdit = () => {
+        setEditingWorkoutId(null)
+        setEditedExercises('')
+    }
 
     return (
         <div className="space-y-8">
@@ -153,27 +178,53 @@ export default function WorkoutsPage() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Button variant="ghost" size="sm">
-                                            <Edit className="w-4 h-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
+                                        {editingWorkoutId === workout.id ? (
+                                            <>
+                                                <Button variant="ghost" size="sm" onClick={() => handleSaveExercises(workout.id)} className="text-emerald-500 hover:text-emerald-600">
+                                                    <Save className="w-4 h-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="sm" onClick={handleCancelEdit} className="text-slate-500 hover:text-slate-600">
+                                                    <X className="w-4 h-4" />
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Button variant="ghost" size="sm" onClick={() => handleEditExercises(workout.id, workout.exercises)}>
+                                                    <Edit className="w-4 h-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                                 {workout.exercises && workout.exercises.length > 0 && (
                                     <div className="mt-4 pt-4 border-t border-slate-100">
                                         <p className="text-sm font-medium text-slate-700 mb-2">Exercises:</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {workout.exercises.map((exercise, idx) => (
-                                                <span
-                                                    key={idx}
-                                                    className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-sm"
-                                                >
-                                                    {exercise}
-                                                </span>
-                                            ))}
-                                        </div>
+                                        {editingWorkoutId === workout.id ? (
+                                            <div className="space-y-2">
+                                                <input
+                                                    type="text"
+                                                    value={editedExercises}
+                                                    onChange={(e) => setEditedExercises(e.target.value)}
+                                                    placeholder="Enter exercises separated by commas"
+                                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                                />
+                                                <p className="text-xs text-slate-500">Separate exercises with commas</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-wrap gap-2">
+                                                {workout.exercises.map((exercise, idx) => (
+                                                    <span
+                                                        key={idx}
+                                                        className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-sm"
+                                                    >
+                                                        {exercise}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </CardContent>

@@ -28,8 +28,8 @@ export function Navbar() {
         { href: '/#pricing', label: 'Pricing' },
     ]
 
-    // If on auth pages, show minimal navbar
-    if (isAuthPage) {
+    // If on auth pages or dashboard, show minimal navbar (dashboard has sidebar)
+    if (isAuthPage || isDashboard) {
         return null
     }
 

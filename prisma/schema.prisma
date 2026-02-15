@@ -9,6 +9,11 @@ datasource db {
   provider = "postgresql"
 }
 
+// Prisma Seed Configuration
+// Run with: npx prisma db seed
+// Or: npm run prisma:seed
+
+
 // User Profile - extends Supabase Auth
 model Profile {
   id             String    @id @default(cuid())

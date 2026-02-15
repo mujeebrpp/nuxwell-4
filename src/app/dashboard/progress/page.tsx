@@ -71,9 +71,9 @@ export default function ProgressPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-slate-500">Current Weight</p>
-                                <p className="text-3xl font-bold text-slate-900">{currentWeight} lbs</p>
+                                <p className="text-3xl font-bold text-slate-900">{currentWeight} kg</p>
                                 <p className="text-sm text-emerald-600 mt-1">
-                                    ↓ {weightLoss} lbs since start
+                                    ↓ {weightLoss} kg since start
                                 </p>
                             </div>
                             <div className="p-3 rounded-xl bg-emerald-100">
@@ -210,7 +210,7 @@ export default function ProgressPage() {
                                 {mockMeasurements.map((m, index) => (
                                     <tr key={index} className="border-b border-slate-100">
                                         <td className="py-3 px-4 text-slate-900">{m.date}</td>
-                                        <td className="py-3 px-4 text-slate-900">{m.weight} lbs</td>
+                                        <td className="py-3 px-4 text-slate-900">{m.weight} kg</td>
                                         <td className="py-3 px-4 text-slate-900">{m.bodyFat}%</td>
                                         <td className="py-3 px-4 text-slate-900">{m.chest}"</td>
                                         <td className="py-3 px-4 text-slate-900">{m.waist}"</td>

@@ -112,7 +112,7 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                                Weight (lbs)
+                                Weight (kg)
                             </label>
                             <div className="relative">
                                 <Scale className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -160,8 +160,8 @@ export default function ProfilePage() {
                                 key={goal.id}
                                 onClick={() => setProfile({ ...profile, fitnessGoal: goal.id })}
                                 className={`p-4 rounded-lg border-2 transition-all text-left ${profile.fitnessGoal === goal.id
-                                        ? 'border-emerald-500 bg-emerald-50'
-                                        : 'border-slate-200 hover:border-slate-300'
+                                    ? 'border-emerald-500 bg-emerald-50'
+                                    : 'border-slate-200 hover:border-slate-300'
                                     }`}
                             >
                                 <span className="text-2xl block mb-1">{goal.icon}</span>
