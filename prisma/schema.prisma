@@ -1,0 +1,77 @@
+// Nuxwell Prisma Schema
+// Wellness Fitness Platform Database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User Profile - extends Supabase Auth
+model Profile {
+  id             String    @id @default(cuid())
+  userId         String    @unique // Links to Supabase auth.users
+  email          String    @unique
+  fullName       String?
+  avatarUrl      String?
+  weight         Float?
+  height         Float?
+  fitnessGoal    String?   // e.g., "weight_loss", "muscle_gain", "maintenance"
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  workouts       Workout[]
+  meals          Meal[]
+  progress       Progress[]
+}
+
+// Workout Sessions
+model Workout {
+  id              String    @id @default(cuid())
+  userId          String
+  profile         Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  type            String    // cardio, strength, flexibility, hiit, yoga
+  durationMinutes Int
+  caloriesBurned  Int?
+  exercises       Json?     // Array of exercise objects
+  completedAt     DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// Meal Logging
+model Meal {
+  id          String    @id @default(cuid())
+  userId      String
+  profile     Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  type        String    // breakfast, lunch, dinner, snack
+  calories    Int
+  protein     Float?
+  carbs       Float?
+  fats        Float?
+  ingredients Json?     // Array of ingredient objects
+  loggedAt    DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// Progress Tracking
+model Progress {
+  id                String    @id @default(cuid())
+  userId            String
+  profile           Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weight            Float?
+  bodyFatPercentage Float?
+  measurements      Json?     // { chest, waist, hips, arms, thighs }
+  notes             String?
+  recordedAt        DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+
+  @@index([userId])
+}
