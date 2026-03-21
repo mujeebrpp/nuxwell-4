@@ -21,7 +21,16 @@ export async function GET(request: NextRequest) {
                 return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
             }
 
-            return NextResponse.json(profile)
+            // Return simplified profile for auth hook
+            return NextResponse.json({
+                profile: {
+                    id: profile.userId,
+                    userId: profile.userId,
+                    email: profile.email,
+                    fullName: profile.fullName,
+                    role: profile.role,
+                }
+            })
         }
 
         const profiles = await prisma.profile.findMany({
@@ -43,7 +52,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { userId, email, fullName, avatarUrl, weight, height, fitnessGoal } = body
+        const { userId, email, fullName, avatarUrl, weight, height, fitnessGoal, role } = body
 
         if (!userId || !email) {
             return NextResponse.json({ error: 'userId and email are required' }, { status: 400 })
@@ -67,6 +76,7 @@ export async function POST(request: NextRequest) {
                 weight,
                 height,
                 fitnessGoal,
+                role: role || 'USER',
             },
         })
 
@@ -81,7 +91,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json()
-        const { userId, fullName, avatarUrl, weight, height, fitnessGoal } = body
+        const { userId, fullName, avatarUrl, weight, height, fitnessGoal, role } = body
 
         if (!userId) {
             return NextResponse.json({ error: 'userId is required' }, { status: 400 })
@@ -95,6 +105,7 @@ export async function PUT(request: NextRequest) {
                 weight,
                 height,
                 fitnessGoal,
+                role,
             },
         })
 

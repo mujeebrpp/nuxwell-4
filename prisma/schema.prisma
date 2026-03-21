@@ -1,5 +1,8 @@
 // Nuxwell Prisma Schema
 // Wellness Fitness Platform Database
+// Note: Profile table is linked to Supabase auth.users via userId field.
+// Since Supabase auth is managed internally, we use a logical relation
+// (userId maps to auth.users.id) rather than a database foreign key.
 
 generator client {
   provider = "prisma-client-js"
@@ -14,29 +17,39 @@ datasource db {
 // Or: npm run prisma:seed
 
 
-// User Profile - extends Supabase Auth
-model Profile {
-  id             String    @id @default(cuid())
-  userId         String    @unique // Links to Supabase auth.users
-  email          String    @unique
-  fullName       String?
-  avatarUrl      String?
-  weight         Float?
-  height         Float?
-  fitnessGoal    String?   // e.g., "weight_loss", "muscle_gain", "maintenance"
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+// User Role Enum
+enum Role {
+  ADMIN
+  TRAINER
+  MEMBER
+  USER
+}
 
-  workouts       Workout[]
-  meals          Meal[]
-  progress       Progress[]
+// User Profile - extends Supabase Auth
+// The userId field directly corresponds to Supabase auth.users.id
+// This is the PRIMARY KEY since each profile is 1:1 with a Supabase user
+model Profile {
+  userId       String    @id // Primary key = Supabase auth.users.id
+  email        String    @unique
+  fullName     String?
+  avatarUrl    String?
+  weight       Float?
+  height       Float?
+  fitnessGoal  String?   // e.g., "weight_loss", "muscle_gain", "maintenance"
+  role         Role      @default(USER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  workouts     Workout[]
+  meals        Meal[]
+  progress     Progress[]
 }
 
 // Workout Sessions
 model Workout {
   id              String    @id @default(cuid())
-  userId          String
-  profile         Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String    // FK to Profile.userId (Supabase auth.users.id)
+  profile         Profile   @relation(fields: [userId], references: [userId], onDelete: Cascade)
   name            String
   type            String    // cardio, strength, flexibility, hiit, yoga
   durationMinutes Int
@@ -51,8 +64,8 @@ model Workout {
 // Meal Logging
 model Meal {
   id          String    @id @default(cuid())
-  userId      String
-  profile     Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String    // FK to Profile.userId (Supabase auth.users.id)
+  profile     Profile   @relation(fields: [userId], references: [userId], onDelete: Cascade)
   name        String
   type        String    // breakfast, lunch, dinner, snack
   calories    Int
@@ -69,8 +82,8 @@ model Meal {
 // Progress Tracking
 model Progress {
   id                String    @id @default(cuid())
-  userId            String
-  profile           Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String    // FK to Profile.userId (Supabase auth.users.id)
+  profile           Profile   @relation(fields: [userId], references: [userId], onDelete: Cascade)
   weight            Float?
   bodyFatPercentage Float?
   measurements      Json?     // { chest, waist, hips, arms, thighs }

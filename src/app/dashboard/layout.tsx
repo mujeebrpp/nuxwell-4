@@ -10,7 +10,7 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode
 }) {
-    const { user, loading } = useAuth()
+    const { user, profile, loading } = useAuth()
     const router = useRouter()
 
     useEffect(() => {
@@ -18,6 +18,24 @@ export default function DashboardLayout({
             router.push('/login')
         }
     }, [user, loading, router])
+
+    // Redirect to role-specific dashboard
+    useEffect(() => {
+        if (!loading && user && profile) {
+            const currentPath = window.location.pathname
+
+            // Only redirect if not already on role-specific dashboard
+            if (profile.role === 'ADMIN' && !currentPath.startsWith('/dashboard/admin')) {
+                router.push('/dashboard/admin')
+            } else if (profile.role === 'TRAINER' && !currentPath.startsWith('/dashboard/trainer')) {
+                router.push('/dashboard/trainer')
+            } else if (profile.role === 'MEMBER' && !currentPath.startsWith('/dashboard/member')) {
+                router.push('/dashboard/member')
+            } else if (profile.role === 'USER' && !currentPath.startsWith('/dashboard/user')) {
+                router.push('/dashboard/user')
+            }
+        }
+    }, [user, profile, loading, router])
 
     if (loading) {
         return (
