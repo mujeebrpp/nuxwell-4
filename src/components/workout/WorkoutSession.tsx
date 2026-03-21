@@ -683,7 +683,7 @@ export function WorkoutSession({
 
                 <div className="flex items-center gap-2">
                     {/* Target indicator */}
-                    {config && (
+                    {config && 'targetType' in config && (
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 rounded-lg">
                             <Target className="w-4 h-4 text-emerald-600" />
                             <span className="text-sm font-medium text-emerald-700">
@@ -730,7 +730,7 @@ export function WorkoutSession({
                         </div>
                         <h3 className="text-2xl font-bold mb-2">🎉 Target Reached! 🎉</h3>
                         <p className="text-emerald-100 mb-4">
-                            Congratulations! You completed {config?.targetValue} {config?.targetType === 'reps' ? 'reps' : 'seconds'} of {exerciseConfig?.name || 'exercise'}!
+                            Congratulations! You completed your target!
                         </p>
                         <div className="flex justify-center gap-4 mt-4">
                             <Button
@@ -853,7 +853,7 @@ export function WorkoutSession({
                 <Card className="bg-blue-50 border-blue-200">
                     <CardContent className="p-4">
                         <h4 className="font-semibold text-blue-900 mb-2">Instructions</h4>
-                        <p className="text-blue-700 text-sm">{exerciseConfig?.description}</p>
+                        <p className="text-blue-700 text-sm">{'description' in (config ?? {}) ? (config as any).description : 'Follow the on-screen instructions to perform the exercise correctly.'}</p>
                     </CardContent>
                 </Card>
             )}
