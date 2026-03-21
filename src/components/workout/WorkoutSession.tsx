@@ -634,7 +634,7 @@ export function WorkoutSession({
     useEffect(() => {
         let targetReachedCondition = false;
 
-        if (config) {
+        if (config && 'targetType' in config) {
             if (config.targetType === 'reps' && config.targetValue > 0) {
                 targetReachedCondition = exerciseState.repCount >= config.targetValue;
             } else if (config.targetType === 'time' && config.targetValue > 0) {
@@ -648,7 +648,7 @@ export function WorkoutSession({
         if (targetReachedCondition && isRunning && !targetReached) {
             setTargetReached(true);
             setIsPaused(true);
-            const targetMessage = config?.targetType === 'time'
+            const targetMessage = config && 'targetType' in config && config.targetType === 'time'
                 ? `Congratulations! You completed ${config.targetValue} seconds!`
                 : `Congratulations! You reached your target!`;
             speak(targetMessage);
@@ -676,7 +676,7 @@ export function WorkoutSession({
                         <ArrowLeft className="w-5 h-5" />
                     </Button>
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">{exerciseConfig?.name || 'Exercise'}</h2>
+                        <h2 className="text-xl font-bold text-slate-900">{'Exercise'}</h2>
                         <p className="text-sm text-slate-500">AI Workout Tracker</p>
                     </div>
                 </div>

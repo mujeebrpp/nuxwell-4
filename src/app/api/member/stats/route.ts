@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
             where: {
                 userId
             },
-            select: { caloriesBurned: true }
+            select: { caloriesBurned: true, durationMinutes: true }
         })
         const caloriesBurned = workouts.reduce((sum, w) => sum + (w.caloriesBurned || 0), 0)
 

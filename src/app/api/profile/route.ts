@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
                     email: profile.email,
                     fullName: profile.fullName,
                     role: profile.role,
+                    fitnessGoal: profile.fitnessGoal,
                 }
             })
         }
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { userId, email, fullName, avatarUrl, weight, height, fitnessGoal, role } = body
+        const { userId, email, fullName, avatarUrl, weight, weightUnit, height, fitnessGoal, role } = body
 
         if (!userId || !email) {
             return NextResponse.json({ error: 'userId and email are required' }, { status: 400 })
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
                 fullName,
                 avatarUrl,
                 weight,
+                weightUnit: weightUnit || 'kg',
                 height,
                 fitnessGoal,
                 role: role || 'USER',
@@ -91,7 +93,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json()
-        const { userId, fullName, avatarUrl, weight, height, fitnessGoal, role } = body
+        const { userId, fullName, avatarUrl, weight, weightUnit, height, fitnessGoal, role } = body
 
         if (!userId) {
             return NextResponse.json({ error: 'userId is required' }, { status: 400 })
@@ -103,6 +105,7 @@ export async function PUT(request: NextRequest) {
                 fullName,
                 avatarUrl,
                 weight,
+                weightUnit: weightUnit || 'kg',
                 height,
                 fitnessGoal,
                 role,

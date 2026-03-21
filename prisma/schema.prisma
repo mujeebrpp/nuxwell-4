@@ -34,6 +34,7 @@ model Profile {
   fullName     String?
   avatarUrl    String?
   weight       Float?
+  weightUnit   String?   @default("kg") // "kg" or "lbs"
   height       Float?
   fitnessGoal  String?   // e.g., "weight_loss", "muscle_gain", "maintenance"
   role         Role      @default(USER)
@@ -41,6 +42,7 @@ model Profile {
   updatedAt    DateTime  @updatedAt
 
   workouts     Workout[]
+  workoutPlans WorkoutPlan[]
   meals        Meal[]
   progress     Progress[]
 }
@@ -90,6 +92,19 @@ model Progress {
   notes             String?
   recordedAt        DateTime  @default(now())
   createdAt         DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// Workout Plans - saved workout configurations
+model WorkoutPlan {
+  id          String    @id @default(cuid())
+  userId      String    // FK to Profile.userId (Supabase auth.users.id)
+  profile     Profile   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  name        String
+  exercises   Json      // Array of exercise objects: { type, targetReps, targetTime, difficulty }
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([userId])
 }
