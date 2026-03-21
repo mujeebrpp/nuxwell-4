@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ExerciseSelector } from '@/components/workout/ExerciseSelector';
 import { WorkoutSession, WorkoutStats } from '@/components/workout/WorkoutSession';
 import { ExerciseType, EXERCISE_CONFIGS } from '@/lib/workout/exerciseDetector';
+import { useAuth } from '@/lib/hooks/use-auth';
 
 const workoutTypes = [
     { id: 'cardio', label: 'Cardio', icon: '🏃', color: 'bg-blue-100 text-blue-600' },
@@ -38,8 +39,17 @@ export default function WorkoutsPage() {
     const [selectedExercise, setSelectedExercise] = useState<ExerciseType | null>(null);
     const [isWorkoutActive, setIsWorkoutActive] = useState(false);
     const [workoutHistory, setWorkoutHistory] = useState<WorkoutStats[]>([]);
-    const [targetReps, setTargetReps] = useState(10); // Default 10 reps for beginners
+    const [exerciseConfig, setExerciseConfig] = useState<{
+        difficulty: 'beginner' | 'intermediate' | 'advanced';
+        targetType: 'reps' | 'time';
+        targetValue: number;
+    } | null>(null);
     const [showConfig, setShowConfig] = useState(false); // Show configuration modal
+
+    // API state
+    const { user, profile } = useAuth();
+    const [isSavingWorkout, setIsSavingWorkout] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     const filteredWorkouts = selectedType
         ? workouts.filter(w => w.type === selectedType)
@@ -72,8 +82,13 @@ export default function WorkoutsPage() {
     };
 
     // Handle exercise selection for AI tracker
-    const handleSelectExercise = (exercise: ExerciseType) => {
+    const handleSelectExercise = (exercise: ExerciseType, config: {
+        difficulty: 'beginner' | 'intermediate' | 'advanced';
+        targetType: 'reps' | 'time';
+        targetValue: number;
+    }) => {
         setSelectedExercise(exercise);
+        setExerciseConfig(config);
         setShowConfig(true); // Show configuration modal
     };
 
@@ -84,23 +99,91 @@ export default function WorkoutsPage() {
     };
 
     // Handle workout completion
-    const handleWorkoutComplete = (stats: WorkoutStats) => {
-        setWorkoutHistory([...workoutHistory, stats]);
-        setIsWorkoutActive(false);
-        setSelectedExercise(null);
+    const handleWorkoutComplete = async (stats: WorkoutStats) => {
+        setIsSavingWorkout(true);
+        setSaveError(null);
 
-        // Also add to the workouts list for display
-        const newWorkout = {
-            id: Date.now(),
-            name: `${stats.exerciseType} Session`,
-            type: 'hiit' as const,
-            duration: Math.ceil(stats.duration / 60),
-            calories: stats.calories,
-            exercises: [stats.exerciseType],
-            date: new Date().toISOString().split('T')[0],
-        };
+        try {
+            // Add to workout history immediately for UI feedback
+            setWorkoutHistory([...workoutHistory, stats]);
+            setIsWorkoutActive(false);
+            setSelectedExercise(null);
 
-        setWorkouts([newWorkout, ...workouts]);
+            // Save to database via API
+            if (user && profile) {
+                const workoutData = {
+                    userId: profile.id,
+                    name: `${stats.exerciseType} Session`,
+                    type: stats.exerciseType.toLowerCase() as 'cardio' | 'strength' | 'flexibility' | 'hiit' | 'yoga',
+                    durationMinutes: Math.ceil(stats.duration / 60),
+                    caloriesBurned: stats.calories,
+                    exercises: [stats.exerciseType],
+                };
+
+                const response = await fetch('/api/workouts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(workoutData),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save workout');
+                }
+
+                const savedWorkout = await response.json();
+
+                // Update local workouts list with the saved workout (including generated ID)
+                setWorkouts(prev => [
+                    {
+                        id: savedWorkout.id,
+                        name: savedWorkout.name,
+                        type: savedWorkout.type,
+                        duration: savedWorkout.durationMinutes,
+                        calories: savedWorkout.caloriesBurned || 0,
+                        exercises: Array.isArray(savedWorkout.exercises) ? savedWorkout.exercises : [stats.exerciseType],
+                        date: new Date(savedWorkout.completedAt).toISOString().split('T')[0],
+                    },
+                    ...prev
+                ]);
+            } else {
+                // Fallback to local storage if not authenticated
+                const newWorkout = {
+                    id: Date.now(),
+                    name: `${stats.exerciseType} Session`,
+                    type: 'hiit' as const,
+                    duration: Math.ceil(stats.duration / 60),
+                    calories: stats.calories,
+                    exercises: [stats.exerciseType],
+                    date: new Date().toISOString().split('T')[0],
+                };
+
+                setWorkouts([newWorkout, ...workouts]);
+            }
+        } catch (error) {
+            console.error('Error saving workout:', error);
+            setSaveError('Failed to save workout. Please try again.');
+
+            // Still add to local state for UI consistency
+            setWorkoutHistory([...workoutHistory, stats]);
+            setIsWorkoutActive(false);
+            setSelectedExercise(null);
+
+            const newWorkout = {
+                id: Date.now(),
+                name: `${stats.exerciseType} Session`,
+                type: 'hiit' as const,
+                duration: Math.ceil(stats.duration / 60),
+                calories: stats.calories,
+                exercises: [stats.exerciseType],
+                date: new Date().toISOString().split('T')[0],
+            };
+
+            setWorkouts([newWorkout, ...workouts]);
+        } finally {
+            setIsSavingWorkout(false);
+        }
     };
 
     // Handle exit from workout
@@ -288,7 +371,7 @@ export default function WorkoutsPage() {
                             exerciseType={selectedExercise!}
                             onComplete={handleWorkoutComplete}
                             onExit={handleExitWorkout}
-                            targetReps={targetReps}
+                            exerciseConfig={exerciseConfig}
                         />
                     )}
                 </div>

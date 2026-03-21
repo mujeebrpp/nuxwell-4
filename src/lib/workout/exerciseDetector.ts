@@ -65,6 +65,21 @@ export interface ExerciseConfig {
         up: number;
     };
     minConfidence: number;
+    // Difficulty levels
+    difficultySettings: {
+        beginner: {
+            targetReps: number;
+            targetTime: number; // in seconds
+        };
+        intermediate: {
+            targetReps: number;
+            targetTime: number; // in seconds
+        };
+        advanced: {
+            targetReps: number;
+            targetTime: number; // in seconds
+        };
+    };
 }
 
 export const EXERCISE_CONFIGS: Record<ExerciseType, ExerciseConfig> = {
@@ -74,6 +89,11 @@ export const EXERCISE_CONFIGS: Record<ExerciseType, ExerciseConfig> = {
         icon: '🦵',
         primaryAngles: { down: 90, up: 160 },
         minConfidence: 0.6,
+        difficultySettings: {
+            beginner: { targetReps: 10, targetTime: 30 },
+            intermediate: { targetReps: 20, targetTime: 45 },
+            advanced: { targetReps: 30, targetTime: 60 },
+        },
     },
     pushup: {
         name: 'Push-up',
@@ -81,6 +101,11 @@ export const EXERCISE_CONFIGS: Record<ExerciseType, ExerciseConfig> = {
         icon: '💪',
         primaryAngles: { down: 90, up: 160 },
         minConfidence: 0.6,
+        difficultySettings: {
+            beginner: { targetReps: 5, targetTime: 20 },
+            intermediate: { targetReps: 15, targetTime: 30 },
+            advanced: { targetReps: 25, targetTime: 45 },
+        },
     },
     jumpingJack: {
         name: 'Jumping Jack',
@@ -88,6 +113,11 @@ export const EXERCISE_CONFIGS: Record<ExerciseType, ExerciseConfig> = {
         icon: '⭐',
         primaryAngles: { down: 30, up: 170 },
         minConfidence: 0.5,
+        difficultySettings: {
+            beginner: { targetReps: 20, targetTime: 30 },
+            intermediate: { targetReps: 40, targetTime: 45 },
+            advanced: { targetReps: 60, targetTime: 60 },
+        },
     },
     plank: {
         name: 'Plank',
@@ -95,6 +125,11 @@ export const EXERCISE_CONFIGS: Record<ExerciseType, ExerciseConfig> = {
         icon: '📏',
         primaryAngles: { down: 180, up: 180 },
         minConfidence: 0.7,
+        difficultySettings: {
+            beginner: { targetReps: 0, targetTime: 20 }, // targetReps unused for plank, targetTime in seconds
+            intermediate: { targetReps: 0, targetTime: 45 },
+            advanced: { targetReps: 0, targetTime: 60 },
+        },
     },
     lunge: {
         name: 'Lunge',
@@ -102,6 +137,11 @@ export const EXERCISE_CONFIGS: Record<ExerciseType, ExerciseConfig> = {
         icon: '🚶',
         primaryAngles: { down: 90, up: 160 },
         minConfidence: 0.6,
+        difficultySettings: {
+            beginner: { targetReps: 10, targetTime: 30 },
+            intermediate: { targetReps: 20, targetTime: 45 },
+            advanced: { targetReps: 30, targetTime: 60 },
+        },
     },
     situp: {
         name: 'Sit-up',
@@ -109,6 +149,11 @@ export const EXERCISE_CONFIGS: Record<ExerciseType, ExerciseConfig> = {
         icon: '🧘',
         primaryAngles: { down: 30, up: 150 },
         minConfidence: 0.5,
+        difficultySettings: {
+            beginner: { targetReps: 15, targetTime: 30 },
+            intermediate: { targetReps: 25, targetTime: 45 },
+            advanced: { targetReps: 35, targetTime: 60 },
+        },
     },
     mountainClimber: {
         name: 'Mountain Climber',
@@ -116,6 +161,11 @@ export const EXERCISE_CONFIGS: Record<ExerciseType, ExerciseConfig> = {
         icon: '⛰️',
         primaryAngles: { down: 60, up: 170 },
         minConfidence: 0.5,
+        difficultySettings: {
+            beginner: { targetReps: 20, targetTime: 30 },
+            intermediate: { targetReps: 40, targetTime: 45 },
+            advanced: { targetReps: 60, targetTime: 60 },
+        },
     },
     highKnees: {
         name: 'High Knees',
@@ -123,6 +173,11 @@ export const EXERCISE_CONFIGS: Record<ExerciseType, ExerciseConfig> = {
         icon: '🏃',
         primaryAngles: { down: 60, up: 170 },
         minConfidence: 0.5,
+        difficultySettings: {
+            beginner: { targetReps: 30, targetTime: 30 },
+            intermediate: { targetReps: 50, targetTime: 45 },
+            advanced: { targetReps: 70, targetTime: 60 },
+        },
     },
     gluteBridge: {
         name: 'Glute Bridge',
@@ -130,6 +185,11 @@ export const EXERCISE_CONFIGS: Record<ExerciseType, ExerciseConfig> = {
         icon: '🍑',
         primaryAngles: { down: 30, up: 160 },
         minConfidence: 0.5,
+        difficultySettings: {
+            beginner: { targetReps: 15, targetTime: 30 },
+            intermediate: { targetReps: 25, targetTime: 45 },
+            advanced: { targetReps: 35, targetTime: 60 },
+        },
     },
     burpee: {
         name: 'Burpee',
@@ -137,6 +197,11 @@ export const EXERCISE_CONFIGS: Record<ExerciseType, ExerciseConfig> = {
         icon: '🔥',
         primaryAngles: { down: 90, up: 170 },
         minConfidence: 0.6,
+        difficultySettings: {
+            beginner: { targetReps: 5, targetTime: 20 },
+            intermediate: { targetReps: 15, targetTime: 30 },
+            advanced: { targetReps: 25, targetTime: 45 },
+        },
     },
 };
 

@@ -30,6 +30,11 @@ interface WorkoutSessionProps {
     onExit: () => void;
     exerciseDuration?: number; // in seconds, 0 = unlimited
     targetReps?: number; // target rep count, 0 = unlimited
+    exerciseConfig?: {
+        difficulty: 'beginner' | 'intermediate' | 'advanced';
+        targetType: 'reps' | 'time';
+        targetValue: number;
+    };
 }
 
 export interface WorkoutStats {
@@ -53,6 +58,7 @@ export function WorkoutSession({
     onExit,
     exerciseDuration = 0,
     targetReps = 0,
+    exerciseConfig,
 }: WorkoutSessionProps) {
     // Refs
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -105,8 +111,8 @@ export function WorkoutSession({
         enabled: true,
     });
 
-    // Exercise config
-    const exerciseConfig = EXERCISE_CONFIGS[exerciseType];
+    // Exercise config - use passed config or fallback to default
+    const config = exerciseConfig ?? EXERCISE_CONFIGS[exerciseType];
 
     // Initialize camera
     const initCamera = useCallback(async () => {
@@ -592,6 +598,13 @@ export function WorkoutSession({
         onComplete(stats);
     }, [stopWorkout, exerciseType, exerciseState.repCount, duration, calories, onComplete]);
 
+    // Cancel workout - discards current workout without saving
+    const cancelWorkout = useCallback(() => {
+        if (window.confirm('Are you sure you want to cancel this workout? All progress will be lost.')) {
+            resetWorkout();
+        }
+    }, [resetWorkout]);
+
     // Timer effect
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -617,14 +630,30 @@ export function WorkoutSession({
         };
     }, [isRunning, isPaused, exerciseDuration, handleExit]);
 
-    // Auto-stop when target reps reached
+    // Auto-stop when target reached (reps or time)
     useEffect(() => {
-        if (targetReps > 0 && exerciseState.repCount >= targetReps && isRunning && !targetReached) {
+        let targetReachedCondition = false;
+
+        if (config) {
+            if (config.targetType === 'reps' && config.targetValue > 0) {
+                targetReachedCondition = exerciseState.repCount >= config.targetValue;
+            } else if (config.targetType === 'time' && config.targetValue > 0) {
+                targetReachedCondition = duration >= config.targetValue;
+            }
+        } else {
+            // Fallback to legacy targetReps
+            targetReachedCondition = targetReps > 0 && exerciseState.repCount >= targetReps;
+        }
+
+        if (targetReachedCondition && isRunning && !targetReached) {
             setTargetReached(true);
             setIsPaused(true);
-            speak('Congratulations! You reached your target!');
+            const targetMessage = config?.targetType === 'time'
+                ? `Congratulations! You completed ${config.targetValue} seconds!`
+                : `Congratulations! You reached your target!`;
+            speak(targetMessage);
         }
-    }, [exerciseState.repCount, targetReps, isRunning, targetReached, speak]);
+    }, [exerciseState.repCount, duration, config, targetReps, isRunning, targetReached, speak]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -654,15 +683,16 @@ export function WorkoutSession({
 
                 <div className="flex items-center gap-2">
                     {/* Target indicator */}
-                    {targetReps > 0 && (
+                    {config && (
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 rounded-lg">
                             <Target className="w-4 h-4 text-emerald-600" />
                             <span className="text-sm font-medium text-emerald-700">
-                                Target: {targetReps} reps
+                                Target: {config.targetValue} {config.targetType === 'reps' ? 'reps' : 'seconds'}
                             </span>
-                            {exerciseState.repCount >= targetReps && (
-                                <CheckCircle className="w-4 h-4 text-emerald-600" />
-                            )}
+                            {(config.targetType === 'reps' && exerciseState.repCount >= config.targetValue) ||
+                                (config.targetType === 'time' && duration >= config.targetValue) && (
+                                    <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                )}
                         </div>
                     )}
                     <Button
@@ -700,7 +730,7 @@ export function WorkoutSession({
                         </div>
                         <h3 className="text-2xl font-bold mb-2">🎉 Target Reached! 🎉</h3>
                         <p className="text-emerald-100 mb-4">
-                            Congratulations! You completed {targetReps} {exerciseConfig?.name || 'reps'}!
+                            Congratulations! You completed {config?.targetValue} {config?.targetType === 'reps' ? 'reps' : 'seconds'} of {exerciseConfig?.name || 'exercise'}!
                         </p>
                         <div className="flex justify-center gap-4 mt-4">
                             <Button
@@ -791,6 +821,11 @@ export function WorkoutSession({
                                 <Button onClick={resetWorkout} variant="outline">
                                     <RotateCcw className="w-5 h-5 mr-2" />
                                     Reset
+                                </Button>
+
+                                <Button onClick={cancelWorkout} variant="danger">
+                                    <X className="w-5 h-5 mr-2" />
+                                    Cancel
                                 </Button>
 
                                 <Button onClick={handleExit} variant="danger">
