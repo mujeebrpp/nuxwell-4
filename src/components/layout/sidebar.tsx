@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
     Dumbbell,
     LayoutDashboard,
@@ -10,10 +10,12 @@ import {
     TrendingUp,
     User,
     Settings,
-    LogOut
+    LogOut,
+    Menu,
+    X
 } from 'lucide-react'
+import { useState } from 'react'
 import { useAuth } from '@/lib/hooks/use-auth'
-import { useRouter } from 'next/navigation'
 
 const sidebarLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -27,6 +29,8 @@ export function Sidebar() {
     const pathname = usePathname()
     const { user, signOut } = useAuth()
     const router = useRouter()
+    const [isMobileOpen, setIsMobileOpen] = useState(false)
+
 
     const handleSignOut = async () => {
         await signOut()
@@ -34,10 +38,21 @@ export function Sidebar() {
         router.refresh()
     }
 
-    return (
-        <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-slate-200 flex flex-col">
-            {/* Navigation Links */}
-            <nav className="flex-1 p-4 space-y-1">
+    const sidebarContent = (
+        <>
+            <div className="border-b border-slate-200 px-4 py-4">
+                <Link href="/" className="flex items-center gap-3 rounded-2xl px-2 py-1">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 shadow-lg shadow-emerald-500/20">
+                        <Dumbbell className="h-5 w-5 text-emerald-400" />
+                    </div>
+                    <div>
+                        <p className="font-semibold tracking-tight text-slate-950">Nuxwell</p>
+                        <p className="text-xs text-slate-500">Wellness control center</p>
+                    </div>
+                </Link>
+            </div>
+
+            <nav className="flex-1 space-y-1 p-4">
                 {sidebarLinks.map((link) => {
                     const isActive = pathname === link.href ||
                         (link.href !== '/dashboard' && pathname?.startsWith(link.href))
@@ -46,36 +61,32 @@ export function Sidebar() {
                         <Link
                             key={link.href}
                             href={link.href}
-                            className={`
-                flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all
-                ${isActive
-                                    ? 'bg-emerald-50 text-emerald-600'
-                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                }
-              `}
+                            onClick={() => setIsMobileOpen(false)}
+                            className={`flex items-center gap-3 rounded-2xl px-4 py-3 font-medium transition-all ${isActive
+                                ? 'bg-slate-950 text-white shadow-lg shadow-slate-300/40'
+                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+                                }`}
                         >
-                            <link.icon className={`w-5 h-5 ${isActive ? 'text-emerald-600' : 'text-slate-400'}`} />
+                            <link.icon className={`h-5 w-5 ${isActive ? 'text-emerald-400' : 'text-slate-400'}`} />
                             {link.label}
                         </Link>
                     )
                 })}
             </nav>
 
-            {/* Bottom Actions */}
-            <div className="p-4 border-t border-slate-200 space-y-1">
-                {/* User Info */}
+            <div className="border-t border-slate-200 p-4 space-y-2">
                 {user && (
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-50">
-                        <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
-                            <span className="text-white text-sm font-medium">
+                    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500">
+                            <span className="text-sm font-medium text-white">
                                 {user.email?.charAt(0).toUpperCase()}
                             </span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 truncate">
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-slate-900">
                                 {user.email?.split('@')[0]}
                             </p>
-                            <p className="text-xs text-slate-500 truncate">
+                            <p className="truncate text-xs text-slate-500">
                                 {user.email}
                             </p>
                         </div>
@@ -83,19 +94,57 @@ export function Sidebar() {
                 )}
                 <Link
                     href="/dashboard/settings"
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-2xl px-4 py-3 font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-950"
                 >
-                    <Settings className="w-5 h-5 text-slate-400" />
+                    <Settings className="h-5 w-5 text-slate-400" />
                     Settings
                 </Link>
                 <button
-                    onClick={handleSignOut}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-600 hover:bg-red-50 transition-all w-full"
+                    onClick={() => {
+                        setIsMobileOpen(false)
+                        handleSignOut()
+                    }}
+                    className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 font-medium text-red-600 transition-all hover:bg-red-50"
                 >
-                    <LogOut className="w-5 h-5" />
+                    <LogOut className="h-5 w-5" />
                     Sign Out
                 </button>
             </div>
-        </aside>
+        </>
+    )
+
+    return (
+        <>
+            <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
+                <div className="flex items-center justify-between gap-3">
+                    <Link href="/dashboard" className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950">
+                            <Dumbbell className="h-5 w-5 text-emerald-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold text-slate-950">Nuxwell</p>
+                            <p className="text-xs text-slate-500">Dashboard</p>
+                        </div>
+                    </Link>
+                    <button
+                        onClick={() => setIsMobileOpen(!isMobileOpen)}
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm"
+                        aria-label="Toggle sidebar"
+                        aria-expanded={isMobileOpen}
+                    >
+                        {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                    </button>
+                </div>
+            </div>
+
+            {isMobileOpen && (
+                <div className="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm lg:hidden" onClick={() => setIsMobileOpen(false)} />
+            )}
+
+            <aside className={`fixed inset-y-0 left-0 z-50 flex w-[86%] max-w-72 flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 lg:w-72 lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:z-30`}>
+                {sidebarContent}
+            </aside>
+        </>
     )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Dumbbell, Activity, Utensils, TrendingUp, Users, Star, ArrowRight, Check } from 'lucide-react'
+import { Dumbbell, Utensils, TrendingUp, Users, Star, ArrowRight, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/lib/hooks/use-auth'
@@ -55,12 +55,7 @@ const pricingPlans = [
     name: 'Starter',
     price: 'Free',
     description: 'Perfect for getting started',
-    features: [
-      'Basic workout tracking',
-      'Meal logging',
-      'Progress charts',
-      'Goal setting',
-    ],
+    features: ['Basic workout tracking', 'Meal logging', 'Progress charts', 'Goal setting'],
     cta: 'Get Started',
     popular: false,
   },
@@ -69,13 +64,7 @@ const pricingPlans = [
     price: '$9.99',
     period: '/month',
     description: 'For serious fitness enthusiasts',
-    features: [
-      'Everything in Starter',
-      'Advanced analytics',
-      'Custom workout plans',
-      'Nutrition insights',
-      'Priority support',
-    ],
+    features: ['Everything in Starter', 'Advanced analytics', 'Custom workout plans', 'Nutrition insights', 'Priority support'],
     cta: 'Start Free Trial',
     popular: true,
   },
@@ -84,13 +73,7 @@ const pricingPlans = [
     price: '$19.99',
     period: '/month',
     description: 'Complete fitness solution',
-    features: [
-      'Everything in Pro',
-      '1-on-1 coaching sessions',
-      'Personalized meal plans',
-      'API access',
-      'White-label options',
-    ],
+    features: ['Everything in Pro', '1-on-1 coaching sessions', 'Personalized meal plans', 'API access', 'White-label options'],
     cta: 'Contact Sales',
     popular: false,
   },
@@ -100,103 +83,133 @@ export default function Home() {
   const { user } = useAuth()
 
   return (
-    <main className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
-        {/* Background Pattern */}
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.14),_transparent_30%),linear-gradient(180deg,#f8fafc_0%,#ffffff_100%)]">
+      <section className="relative overflow-hidden px-4 pb-16 pt-28 sm:pb-20 sm:pt-32">
         <div className="absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/50 to-white" />
-          <div className="absolute top-20 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-200/30 rounded-full blur-3xl" />
+          <div className="absolute right-0 top-20 h-96 w-96 rounded-full bg-emerald-200/30 blur-3xl" />
+          <div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-amber-200/30 blur-3xl" />
         </div>
 
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-medium mb-6">
-              <Star className="w-4 h-4" />
-              Trusted by 10,000+ fitness enthusiasts
-            </div>
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="mx-auto max-w-3xl text-center lg:mx-0 lg:text-left">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm">
+                <Star className="h-4 w-4" />
+                Trusted by 10,000+ fitness enthusiasts
+              </div>
 
-            <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-              Your Wellness{''}
-              <span className="text-emerald-600"> Journey</span>
-              <br />Starts Here
-            </h1>
+              <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight text-slate-950 sm:text-5xl md:text-6xl">
+                Your Wellness <span className="text-emerald-600">Journey</span>
+                <br />
+                Starts Here
+              </h1>
 
-            <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
-              Transform your fitness with personalized workouts, comprehensive meal plans, and detailed progress tracking. Join thousands achieving their goals with Nuxwell.
-            </p>
+              <p className="mb-8 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg lg:mx-0">
+                Transform your fitness with personalized workouts, comprehensive meal plans, and detailed progress tracking.
+                Nuxwell keeps every essential habit in one calm, focused experience.
+              </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              {user ? (
-                <Link href="/dashboard">
-                  <Button size="lg" className="px-8">
-                    Go to Dashboard
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Button>
-                </Link>
-              ) : (
-                <>
-                  <Link href="/register">
-                    <Button size="lg" className="px-8">
-                      Start Free Trial
-                      <ArrowRight className="w-5 h-5 ml-2" />
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center lg:justify-start">
+                {user ? (
+                  <Link href="/dashboard">
+                    <Button size="lg" className="w-full rounded-2xl px-8 sm:w-auto">
+                      Go to Dashboard
+                      <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
-                  <Link href="/#features">
-                    <Button size="lg" variant="outline" className="px-8">
-                      Learn More
-                    </Button>
-                  </Link>
-                </>
-              )}
+                ) : (
+                  <>
+                    <Link href="/register">
+                      <Button size="lg" className="w-full rounded-2xl px-8 sm:w-auto">
+                        Start Free Trial
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </Button>
+                    </Link>
+                    <Link href="/#features">
+                      <Button size="lg" variant="outline" className="w-full rounded-2xl px-8 sm:w-auto">
+                        Learn More
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-12 grid max-w-xl grid-cols-3 gap-3 sm:gap-4 lg:mx-0">
+                {[
+                  ['10K+', 'Active Users'],
+                  ['50K+', 'Workouts Logged'],
+                  ['98%', 'Satisfaction'],
+                ].map(([value, label]) => (
+                  <div key={label} className="rounded-2xl border border-white/80 bg-white/80 px-4 py-4 shadow-sm backdrop-blur">
+                    <div className="text-2xl font-bold text-slate-950 sm:text-3xl">{value}</div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-slate-500 sm:text-sm">{label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Stats */}
-            <div className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto">
-              <div>
-                <div className="text-3xl font-bold text-emerald-600">10K+</div>
-                <div className="text-sm text-slate-600">Active Users</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-emerald-600">50K+</div>
-                <div className="text-sm text-slate-600">Workouts Logged</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-emerald-600">98%</div>
-                <div className="text-sm text-slate-600">Satisfaction</div>
+            <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+              <div className="absolute inset-0 -z-10 bg-gradient-to-br from-emerald-200/50 via-white to-slate-200/40 blur-3xl" />
+              <div className="rounded-[2rem] border border-white/70 bg-white/80 p-4 shadow-2xl shadow-slate-200/50 backdrop-blur">
+                <div className="rounded-[1.5rem] bg-slate-950 p-5 text-white sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-white/60">Today&apos;s momentum</p>
+                      <p className="mt-1 text-2xl font-semibold">84% goal streak</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/10 px-3 py-2 text-sm text-emerald-300">Live</div>
+                  </div>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl bg-white/5 p-4">
+                      <p className="text-sm text-white/60">Workout plan</p>
+                      <p className="mt-2 text-lg font-medium">Mobility + Strength</p>
+                      <p className="mt-1 text-sm text-white/60">28 min guided session</p>
+                    </div>
+                    <div className="rounded-2xl bg-emerald-500/15 p-4">
+                      <p className="text-sm text-emerald-200">Nutrition target</p>
+                      <p className="mt-2 text-lg font-medium text-white">1,850 kcal</p>
+                      <p className="mt-1 text-sm text-emerald-100/80">Balanced protein-focused plan</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 rounded-2xl bg-white p-4 text-slate-900">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Recovery score</span>
+                      <span className="font-semibold text-emerald-600">Excellent</span>
+                    </div>
+                    <div className="mt-3 h-2 rounded-full bg-slate-100">
+                      <div className="h-2 w-[78%] rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600" />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-20 px-4 bg-slate-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Everything You Need to{''}
-              <span className="text-emerald-600"> Succeed</span>
+      <section id="features" className="bg-slate-50 px-4 py-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-slate-900 sm:text-4xl">
+              Everything You Need to <span className="text-emerald-600">Succeed</span>
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Comprehensive tools designed to help you achieve your fitness goals efficiently.
+            <p className="mx-auto max-w-2xl text-lg text-slate-600">
+              Essential tools designed to help you train, eat, and recover with clarity.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, index) => (
-              <Card key={index} hover className="text-center">
+              <Card key={index} hover className="rounded-3xl border-white/80 text-center shadow-sm shadow-slate-200/40">
                 <CardContent className="p-6">
-                  <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-emerald-100 flex items-center justify-center">
-                    <feature.icon className="w-7 h-7 text-emerald-600" />
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100">
+                    <feature.icon className="h-7 w-7 text-emerald-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-slate-600 text-sm">
-                    {feature.description}
-                  </p>
+                  <h3 className="mb-2 text-lg font-semibold text-slate-900">{feature.title}</h3>
+                  <p className="text-sm leading-6 text-slate-600">{feature.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -204,29 +217,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Loved by{''}
-              <span className="text-emerald-600"> Fitness Pros</span>
+      <section className="px-4 py-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-slate-900 sm:text-4xl">
+              Loved by <span className="text-emerald-600">Fitness Pros</span>
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              See what our community has to say about their experience with Nuxwell.
+            <p className="mx-auto max-w-2xl text-lg text-slate-600">
+              See how Nuxwell helps members stay consistent without the clutter.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid gap-6 md:grid-cols-3">
             {testimonials.map((testimonial, index) => (
-              <Card key={index}>
+              <Card key={index} className="rounded-3xl border-white/80 bg-white/90 shadow-sm shadow-slate-200/40">
                 <CardContent className="p-6">
-                  <div className="flex gap-1 mb-4">
+                  <div className="mb-4 flex gap-1">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+                      <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />
                     ))}
                   </div>
-                  <p className="text-slate-600 mb-4">"{testimonial.content}"</p>
+                  <p className="mb-4 text-slate-600">&quot;{testimonial.content}&quot;</p>
                   <div>
                     <div className="font-semibold text-slate-900">{testimonial.name}</div>
                     <div className="text-sm text-slate-500">{testimonial.role}</div>
@@ -238,55 +249,44 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4 bg-slate-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Simple,{''}
-              <span className="text-emerald-600"> Transparent</span> Pricing
+      <section id="pricing" className="bg-slate-50 px-4 py-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-slate-900 sm:text-4xl">
+              Simple, <span className="text-emerald-600">Transparent</span> Pricing
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Choose the plan that fits your fitness journey. Upgrade or downgrade anytime.
+            <p className="mx-auto max-w-2xl text-lg text-slate-600">
+              Choose the plan that matches your pace. Upgrade or downgrade anytime.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
             {pricingPlans.map((plan, index) => (
               <Card
                 key={index}
-                className={`relative ${plan.popular ? 'border-emerald-500 border-2' : ''}`}
+                className={`relative rounded-[2rem] bg-white/90 shadow-sm shadow-slate-200/40 ${plan.popular ? 'border-2 border-emerald-500 shadow-lg shadow-emerald-100' : 'border-white/80'}`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-emerald-500 text-white text-sm font-medium rounded-full">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-emerald-500 px-4 py-1 text-sm font-medium text-white">
                     Most Popular
                   </div>
                 )}
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold text-slate-900 mb-2">
-                    {plan.name}
-                  </h3>
-                  <div className="mb-4">
+                <CardContent className="p-6 sm:p-8">
+                  <h3 className="text-2xl font-bold text-slate-900">{plan.name}</h3>
+                  <div className="mt-4 flex items-end gap-1">
                     <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
-                    {plan.period && (
-                      <span className="text-slate-500">{plan.period}</span>
-                    )}
+                    {plan.period && <span className="pb-1 text-slate-500">{plan.period}</span>}
                   </div>
-                  <p className="text-slate-600 text-sm mb-6">{plan.description}</p>
-
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
-                        <Check className="w-4 h-4 text-emerald-500" />
-                        {feature}
+                  <p className="mt-2 text-slate-600">{plan.description}</p>
+                  <ul className="mt-6 space-y-3">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3 text-slate-600">
+                        <Check className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                        <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
-
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? 'primary' : 'outline'}
-                  >
+                  <Button className="mt-8 w-full rounded-2xl" variant={plan.popular ? 'primary' : 'outline'}>
                     {plan.cta}
                   </Button>
                 </CardContent>
@@ -295,54 +295,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="relative rounded-3xl overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-700" />
-            <div className="relative p-12 md:p-16 text-center">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Ready to Transform Your{''}
-                <span className="text-emerald-200"> Fitness?</span>
-              </h2>
-              <p className="text-emerald-100 text-lg mb-8 max-w-xl mx-auto">
-                Join thousands of people who have already started their wellness journey with Nuxwell. Your transformation begins today.
-              </p>
-              {user ? (
-                <Link href="/dashboard">
-                  <Button size="lg" variant="secondary" className="px-8">
-                    Go to Dashboard
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/register">
-                  <Button size="lg" className="px-8 bg-white text-emerald-600 hover:bg-emerald-50">
-                    Get Started Free
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-12 px-4 border-t border-slate-200">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-                <Dumbbell className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-lg font-bold text-slate-900">Nuxwell</span>
-            </div>
-            <p className="text-slate-500 text-sm">
-              © 2026 Nuxwell. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
     </main>
   )
 }
