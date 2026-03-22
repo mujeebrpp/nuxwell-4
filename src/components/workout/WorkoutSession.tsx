@@ -84,7 +84,10 @@ export function WorkoutSession({
     const [showSkeleton, setShowSkeleton] = useState(true);
     const [isCompleted, setIsCompleted] = useState(false);
     const [targetReached, setTargetReached] = useState(false);
-    const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('portrait');
+    // Auto-detect mobile and set default orientation
+    const [orientation, setOrientation] = useState<'landscape' | 'portrait'>(
+        typeof window !== 'undefined' && window.innerWidth < 768 ? 'portrait' : 'landscape'
+    );
     const [zoom, setZoom] = useState(1);
 
     // Refs for state values to avoid stale closures in callbacks
@@ -131,8 +134,11 @@ export function WorkoutSession({
         if (!videoRef.current) return false;
 
         try {
+            // Auto-detect mobile and use portrait mode
+            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+            const currentOrientation = isMobile ? 'portrait' : orientationRef.current;
+
             // Use 1280x720 for landscape, 720x1280 for portrait (9:16 ratio)
-            const currentOrientation = orientationRef.current;
             const videoWidth = currentOrientation === 'landscape' ? 1280 : 720;
             const videoHeight = currentOrientation === 'landscape' ? 720 : 1280;
 

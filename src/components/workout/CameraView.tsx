@@ -206,7 +206,7 @@ export function CameraView({
     return (
         <div
             ref={containerRef}
-            className="relative rounded-xl overflow-hidden bg-slate-900 w-full h-full max-h-[60vh] lg:max-h-[900px]"
+            className="relative rounded-xl overflow-hidden bg-slate-900 w-full h-full max-h-[70vh] lg:max-h-[900px]"
             style={{
                 aspectRatio: orientation === 'landscape' ? '16/9' : '9/16'
             }}
@@ -214,7 +214,7 @@ export function CameraView({
             {/* Video element */}
             <video
                 ref={videoRef}
-                className={`absolute top-0 left-0 w-full h-full object-contain ${isRunning ? 'block' : 'hidden'}`}
+                className={`absolute top-0 left-0 w-full h-full ${orientation === 'portrait' ? 'object-cover' : 'object-contain'} ${isRunning ? 'block' : 'hidden'}`}
                 playsInline
                 muted
                 autoPlay
@@ -226,8 +226,8 @@ export function CameraView({
                 ref={canvasRef}
                 width={canvasSize.width}
                 height={canvasSize.height}
-                className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                style={{ transform: 'scaleX(-1)', zIndex: 10, objectFit: 'contain' }}
+                className={`absolute top-0 left-0 w-full h-full pointer-events-none ${orientation === 'portrait' ? 'object-cover' : 'object-contain'}`}
+                style={{ transform: 'scaleX(-1)', zIndex: 10 }}
             />
 
             {/* Status overlay when not running */}
