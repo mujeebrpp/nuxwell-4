@@ -1,35 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  /* Nuxwell Wellness Brand Colors */
   --primary: #10B981;
-  /* Emerald Green - wellness, growth */
   --primary-dark: #059669;
   --primary-light: #34D399;
   --secondary: #64748B;
-  /* Slate Gray - professional */
   --accent: #F59E0B;
-  /* Amber - energy, motivation */
   --accent-dark: #D97706;
-
-  /* Backgrounds */
   --background: #F8FAFC;
-  /* Light gray background */
   --background-dark: #0F172A;
   --surface: #FFFFFF;
   --surface-dark: #1E293B;
-
-  /* Text */
   --foreground: #1E293B;
   --foreground-dark: #F1F5F9;
-
-  /* Semantic colors */
   --success: #10B981;
   --warning: #F59E0B;
   --error: #EF4444;
   --info: #3B82F6;
-
-  /* Font */
   --font-sans: 'Inter', system-ui, sans-serif;
 }
 
@@ -40,20 +27,16 @@
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-accent-dark: var(--accent-dark);
-
   --color-background: var(--background);
   --color-background-dark: var(--background-dark);
   --color-surface: var(--surface);
   --color-surface-dark: var(--surface-dark);
-
   --color-foreground: var(--foreground);
   --color-foreground-dark: var(--foreground-dark);
-
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-error: var(--error);
   --color-info: var(--info);
-
   --font-sans: var(--font-sans);
 }
 
@@ -64,13 +47,24 @@
   }
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom utilities */
 .glass {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -85,7 +79,6 @@ body {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
 }
 
-/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -109,7 +102,6 @@ body {
 }
 
 @keyframes pulse-glow {
-
   0%,
   100% {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
@@ -132,7 +124,6 @@ body {
   animation: pulse-glow 2s infinite;
 }
 
-/* Card hover effects */
 .card-hover {
   transition: all 0.3s ease;
 }

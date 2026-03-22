@@ -19,12 +19,10 @@ export default function DashboardLayout({
         }
     }, [user, loading, router])
 
-    // Redirect to role-specific dashboard
     useEffect(() => {
         if (!loading && user && profile) {
             const currentPath = window.location.pathname
 
-            // Only redirect if not already on role-specific dashboard
             if (profile.role === 'ADMIN' && !currentPath.startsWith('/dashboard/admin')) {
                 router.push('/dashboard/admin')
             } else if (profile.role === 'TRAINER' && !currentPath.startsWith('/dashboard/trainer')) {
@@ -39,8 +37,8 @@ export default function DashboardLayout({
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+            <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.16),_transparent_30%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]">
+                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-emerald-500"></div>
             </div>
         )
     }
@@ -50,10 +48,10 @@ export default function DashboardLayout({
     }
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.10),_transparent_30%),linear-gradient(180deg,#f8fafc_0%,#ffffff_100%)]">
             <Sidebar />
-            <main className="pl-64">
-                <div className="p-8">
+            <main className="min-h-screen lg:pl-72">
+                <div className="px-4 py-4 sm:px-6 sm:py-6 lg:p-8">
                     {children}
                 </div>
             </main>
