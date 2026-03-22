@@ -206,10 +206,9 @@ export function CameraView({
     return (
         <div
             ref={containerRef}
-            className="relative rounded-xl overflow-hidden bg-slate-900 w-full h-full"
+            className="relative rounded-xl overflow-hidden bg-slate-900 w-full h-full max-h-[60vh] lg:max-h-[900px]"
             style={{
-                aspectRatio: orientation === 'landscape' ? '16/9' : '9/16',
-                maxHeight: '900px'
+                aspectRatio: orientation === 'landscape' ? '16/9' : '9/16'
             }}
         >
             {/* Video element */}

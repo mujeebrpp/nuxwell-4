@@ -483,7 +483,26 @@ export function WorkoutSession({
     // Initialize MediaPipe Pose
     const initPose = useCallback(async () => {
         try {
-            const { Pose } = await import('@mediapipe/pose');
+            // Add retry logic for chunk loading
+            let Pose;
+            try {
+                const poseModule = await import('@mediapipe/pose');
+                Pose = poseModule.Pose;
+            } catch (chunkError: any) {
+                // ChunkLoadError - try to reload the page or retry
+                console.error('Chunk load error, retrying:', chunkError);
+
+                // Wait a moment and retry once
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                try {
+                    const poseModule = await import('@mediapipe/pose');
+                    Pose = poseModule.Pose;
+                } catch (retryError) {
+                    // If retry also fails, show a more helpful error
+                    setError('Failed to load AI tracker. Please refresh the page and try again. If the problem persists, check your internet connection.');
+                    throw retryError;
+                }
+            }
 
             const pose = new Pose({
                 locateFile: (file: string) => {
@@ -685,30 +704,30 @@ export function WorkoutSession({
     }, []);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 lg:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2 sm:gap-4">
                     <Button variant="ghost" size="sm" onClick={handleExit}>
                         <ArrowLeft className="w-5 h-5" />
                     </Button>
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">{'Exercise'}</h2>
-                        <p className="text-sm text-slate-500">AI Workout Tracker</p>
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-900">{'Exercise'}</h2>
+                        <p className="text-sm text-slate-500 hidden sm:block">AI Workout Tracker</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     {/* Target indicator */}
                     {config && 'targetType' in config && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 rounded-lg">
-                            <Target className="w-4 h-4 text-emerald-600" />
-                            <span className="text-sm font-medium text-emerald-700">
-                                Target: {config.targetValue} {config.targetType === 'reps' ? 'reps' : 'seconds'}
+                        <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 bg-emerald-100 rounded-lg">
+                            <Target className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600" />
+                            <span className="text-xs sm:text-sm font-medium text-emerald-700">
+                                {config.targetValue} {config.targetType === 'reps' ? 'reps' : 'sec'}
                             </span>
                             {(config.targetType === 'reps' && exerciseState.repCount >= config.targetValue) ||
                                 (config.targetType === 'time' && duration >= config.targetValue) && (
-                                    <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600" />
                                 )}
                         </div>
                     )}
@@ -717,6 +736,7 @@ export function WorkoutSession({
                         size="sm"
                         onClick={() => setShowSkeleton(!showSkeleton)}
                         title={showSkeleton ? 'Hide skeleton' : 'Show skeleton'}
+                        className="h-8 w-8 p-0"
                     >
                         {showSkeleton ? <Camera className="w-4 h-4" /> : <CameraOff className="w-4 h-4" />}
                     </Button>
@@ -788,14 +808,14 @@ export function WorkoutSession({
                 </Card>
             )}
 
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid lg:grid-cols-2 gap-4 lg:gap-6">
                 {/* Camera View */}
                 <div>
                     {/* Orientation and Zoom Controls */}
-                    <div className="flex items-center justify-between mb-3 gap-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 gap-2">
                         {/* Orientation Toggle */}
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-slate-400">Orientation</span>
+                            <span className="text-sm text-slate-400 hidden sm:inline">Orientation</span>
                             <Button
                                 onClick={() => setOrientation(orientation === 'landscape' ? 'portrait' : 'landscape')}
                                 variant="outline"
@@ -805,12 +825,12 @@ export function WorkoutSession({
                                 {orientation === 'landscape' ? (
                                     <>
                                         <MonitorPlay className="w-4 h-4" />
-                                        Landscape
+                                        <span className="hidden sm:inline">Landscape</span>
                                     </>
                                 ) : (
                                     <>
                                         <Smartphone className="w-4 h-4" />
-                                        Portrait
+                                        <span className="hidden sm:inline">Portrait</span>
                                     </>
                                 )}
                             </Button>
@@ -818,7 +838,7 @@ export function WorkoutSession({
 
                         {/* Zoom Controls */}
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-slate-400">Zoom</span>
+                            <span className="text-sm text-slate-400 hidden sm:inline">Zoom</span>
                             <div className="flex items-center gap-1">
                                 <Button
                                     onClick={() => setZoom(Math.max(0.5, zoom - 0.25))}
@@ -829,7 +849,7 @@ export function WorkoutSession({
                                 >
                                     <ZoomOut className="w-4 h-4" />
                                 </Button>
-                                <span className="text-sm text-white min-w-[3rem] text-center">{zoom}x</span>
+                                <span className="text-sm text-slate-600 dark:text-white min-w-[3rem] text-center">{zoom}x</span>
                                 <Button
                                     onClick={() => setZoom(Math.min(3, zoom + 0.25))}
                                     variant="outline"
@@ -854,12 +874,12 @@ export function WorkoutSession({
                     />
 
                     {/* Camera Controls */}
-                    <div className="mt-4 flex justify-center gap-3">
+                    <div className="mt-3 lg:mt-4 flex flex-wrap justify-center gap-2 lg:gap-3">
                         {!isRunning ? (
                             <Button
                                 onClick={startWorkout}
                                 disabled={isLoading}
-                                className="bg-emerald-500 hover:bg-emerald-600"
+                                className="bg-emerald-500 hover:bg-emerald-600 w-full sm:w-auto min-w-[140px]"
                             >
                                 {isLoading ? (
                                     <span>Loading...</span>
@@ -875,33 +895,34 @@ export function WorkoutSession({
                                 <Button
                                     onClick={() => setIsPaused(!isPaused)}
                                     variant="outline"
+                                    size="sm"
                                 >
                                     {isPaused ? (
                                         <>
-                                            <Play className="w-5 h-5 mr-2" />
-                                            Resume
+                                            <Play className="w-4 h-4 mr-1" />
+                                            <span className="hidden sm:inline">Resume</span>
                                         </>
                                     ) : (
                                         <>
-                                            <Pause className="w-5 h-5 mr-2" />
-                                            Pause
+                                            <Pause className="w-4 h-4 mr-1" />
+                                            <span className="hidden sm:inline">Pause</span>
                                         </>
                                     )}
                                 </Button>
 
-                                <Button onClick={resetWorkout} variant="outline">
-                                    <RotateCcw className="w-5 h-5 mr-2" />
-                                    Reset
+                                <Button onClick={resetWorkout} variant="outline" size="sm">
+                                    <RotateCcw className="w-4 h-4 mr-1" />
+                                    <span className="hidden sm:inline">Reset</span>
                                 </Button>
 
-                                <Button onClick={cancelWorkout} variant="danger">
-                                    <X className="w-5 h-5 mr-2" />
-                                    Cancel
+                                <Button onClick={cancelWorkout} variant="danger" size="sm">
+                                    <X className="w-4 h-4 mr-1" />
+                                    <span className="hidden sm:inline">Cancel</span>
                                 </Button>
 
-                                <Button onClick={handleExit} variant="danger">
-                                    <Check className="w-5 h-5 mr-2" />
-                                    Finish
+                                <Button onClick={handleExit} variant="danger" size="sm">
+                                    <Check className="w-4 h-4 mr-1" />
+                                    <span className="hidden sm:inline">Finish</span>
                                 </Button>
                             </>
                         )}

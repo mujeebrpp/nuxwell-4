@@ -929,7 +929,7 @@ export default function WorkoutsPage() {
 
             {/* AI Tracker View */}
             {viewMode === 'ai-tracker' && (
-                <div className="space-y-6">
+                <div className={isWorkoutActive ? "space-y-4" : "space-y-6"}>
                     {!isWorkoutActive ? (
                         <>
                             {workoutHistory.length > 0 && (
