@@ -21,7 +21,11 @@ import {
     X,
     Trophy,
     Target,
-    PartyPopper
+    PartyPopper,
+    Smartphone,
+    MonitorPlay,
+    ZoomIn,
+    ZoomOut
 } from 'lucide-react';
 
 interface WorkoutSessionProps {
@@ -80,6 +84,8 @@ export function WorkoutSession({
     const [showSkeleton, setShowSkeleton] = useState(true);
     const [isCompleted, setIsCompleted] = useState(false);
     const [targetReached, setTargetReached] = useState(false);
+    const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('portrait');
+    const [zoom, setZoom] = useState(1);
 
     // Refs for state values to avoid stale closures in callbacks
     const isRunningRef = useRef<boolean>(isRunning);
@@ -114,15 +120,26 @@ export function WorkoutSession({
     // Exercise config - use passed config or fallback to default
     const config = exerciseConfig ?? EXERCISE_CONFIGS[exerciseType];
 
+    // Ref for orientation to avoid stale closures
+    const orientationRef = useRef(orientation);
+    useEffect(() => {
+        orientationRef.current = orientation;
+    }, [orientation]);
+
     // Initialize camera
     const initCamera = useCallback(async () => {
         if (!videoRef.current) return false;
 
         try {
+            // Use 1280x720 for landscape, 720x1280 for portrait (9:16 ratio)
+            const currentOrientation = orientationRef.current;
+            const videoWidth = currentOrientation === 'landscape' ? 1280 : 720;
+            const videoHeight = currentOrientation === 'landscape' ? 720 : 1280;
+
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
-                    width: 640,
-                    height: 480,
+                    width: { ideal: videoWidth },
+                    height: { ideal: videoHeight },
                     facingMode: 'user',
                 },
                 audio: false,
@@ -774,12 +791,66 @@ export function WorkoutSession({
             <div className="grid lg:grid-cols-2 gap-6">
                 {/* Camera View */}
                 <div>
+                    {/* Orientation and Zoom Controls */}
+                    <div className="flex items-center justify-between mb-3 gap-4">
+                        {/* Orientation Toggle */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-slate-400">Orientation</span>
+                            <Button
+                                onClick={() => setOrientation(orientation === 'landscape' ? 'portrait' : 'landscape')}
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-2"
+                            >
+                                {orientation === 'landscape' ? (
+                                    <>
+                                        <MonitorPlay className="w-4 h-4" />
+                                        Landscape
+                                    </>
+                                ) : (
+                                    <>
+                                        <Smartphone className="w-4 h-4" />
+                                        Portrait
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+
+                        {/* Zoom Controls */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-slate-400">Zoom</span>
+                            <div className="flex items-center gap-1">
+                                <Button
+                                    onClick={() => setZoom(Math.max(0.5, zoom - 0.25))}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    disabled={zoom <= 0.5}
+                                >
+                                    <ZoomOut className="w-4 h-4" />
+                                </Button>
+                                <span className="text-sm text-white min-w-[3rem] text-center">{zoom}x</span>
+                                <Button
+                                    onClick={() => setZoom(Math.min(3, zoom + 0.25))}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    disabled={zoom >= 3}
+                                >
+                                    <ZoomIn className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
                     <CameraView
                         videoRef={videoRef}
                         canvasRef={canvasRef}
                         landmarks={landmarks}
                         isRunning={isRunning && !isPaused}
                         showSkeleton={showSkeleton}
+                        orientation={orientation}
+                        zoom={zoom}
                     />
 
                     {/* Camera Controls */}

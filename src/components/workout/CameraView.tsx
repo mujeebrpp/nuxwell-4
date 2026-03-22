@@ -11,6 +11,8 @@ interface CameraViewProps {
     width?: number;
     height?: number;
     showSkeleton?: boolean;
+    orientation?: 'landscape' | 'portrait';
+    zoom?: number;
 }
 
 export function CameraView({
@@ -21,6 +23,8 @@ export function CameraView({
     width = 640,
     height = 480,
     showSkeleton = true,
+    orientation = 'portrait',
+    zoom = 1,
 }: CameraViewProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [canvasSize, setCanvasSize] = useState({ width, height });
@@ -202,17 +206,20 @@ export function CameraView({
     return (
         <div
             ref={containerRef}
-            className="relative rounded-xl overflow-hidden bg-slate-900 w-full"
-            style={{ aspectRatio: '4/3' }}
+            className="relative rounded-xl overflow-hidden bg-slate-900 w-full h-full"
+            style={{
+                aspectRatio: orientation === 'landscape' ? '16/9' : '9/16',
+                maxHeight: '900px'
+            }}
         >
             {/* Video element */}
             <video
                 ref={videoRef}
-                className={`absolute top-0 left-0 w-full h-full object-cover ${isRunning ? 'block' : 'hidden'}`}
+                className={`absolute top-0 left-0 w-full h-full object-contain ${isRunning ? 'block' : 'hidden'}`}
                 playsInline
                 muted
                 autoPlay
-                style={{ transform: 'scaleX(-1)' }}
+                style={{ transform: `scaleX(-1) scale(${zoom})` }}
             />
 
             {/* Canvas for skeleton - always rendered */}
@@ -221,7 +228,7 @@ export function CameraView({
                 width={canvasSize.width}
                 height={canvasSize.height}
                 className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                style={{ transform: 'scaleX(-1)', zIndex: 10 }}
+                style={{ transform: 'scaleX(-1)', zIndex: 10, objectFit: 'contain' }}
             />
 
             {/* Status overlay when not running */}
