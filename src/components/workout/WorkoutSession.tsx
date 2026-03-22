@@ -84,11 +84,17 @@ export function WorkoutSession({
     const [showSkeleton, setShowSkeleton] = useState(true);
     const [isCompleted, setIsCompleted] = useState(false);
     const [targetReached, setTargetReached] = useState(false);
-    // Auto-detect mobile and set default orientation
-    const [orientation, setOrientation] = useState<'landscape' | 'portrait'>(
-        typeof window !== 'undefined' && window.innerWidth < 768 ? 'portrait' : 'landscape'
-    );
-    const [zoom, setZoom] = useState(1);
+    // Auto-detect mobile and set default orientation and zoom
+    const getInitialState = () => {
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            return { orientation: 'portrait' as const, zoom: 0.75 };
+        }
+        return { orientation: 'landscape' as const, zoom: 1 };
+    };
+
+    const initialState = getInitialState();
+    const [orientation, setOrientation] = useState<'landscape' | 'portrait'>(initialState.orientation);
+    const [zoom, setZoom] = useState(initialState.zoom);
 
     // Refs for state values to avoid stale closures in callbacks
     const isRunningRef = useRef<boolean>(isRunning);
