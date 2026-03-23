@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Mail, Lock, Bell, Shield, Save, Eye, EyeOff, Scale, Target, Moon, Sun, Camera, Monitor, Settings as SettingsIcon, ChevronDown, ChevronUp } from 'lucide-react'
+import { User, Mail, Lock, Bell, Shield, Save, Eye, EyeOff, Scale, Target, Moon, Sun, Camera, Monitor, Settings as SettingsIcon, ChevronDown, ChevronUp, Video, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 
 const fitnessGoals = [
     { id: 'weight_loss', label: 'Weight Loss', icon: '📉', description: 'Lose weight through calorie deficit and cardio' },
@@ -517,6 +518,33 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     )}
+                </CardContent>
+            </Card>
+
+            {/* MediaPipe Pose Settings */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Video className="h-5 w-5" />
+                        MediaPipe Pose Settings
+                    </CardTitle>
+                    <CardDescription>
+                        Configure camera and pose detection for workout tracking
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Adjust MediaPipe Pose settings including camera selection, model complexity, confidence thresholds, and display options for optimal workout tracking.
+                        </p>
+                        <Link href="/dashboard/settings/mediapipe">
+                            <Button variant="outline" className="w-full">
+                                <SettingsIcon className="h-4 w-4 mr-2" />
+                                Open MediaPipe Pose Settings
+                                <ChevronRight className="h-4 w-4 ml-2" />
+                            </Button>
+                        </Link>
+                    </div>
                 </CardContent>
             </Card>
 

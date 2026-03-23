@@ -84,8 +84,10 @@ export function WorkoutSession({
     const [showSkeleton, setShowSkeleton] = useState(true);
     const [isCompleted, setIsCompleted] = useState(false);
     const [targetReached, setTargetReached] = useState(false);
-    // Auto-detect mobile and set default orientation and zoom
+
+    // Default state - will be updated after mount with saved settings
     const getInitialState = () => {
+        // Fallback to auto-detect
         if (typeof window !== 'undefined' && window.innerWidth < 768) {
             return { orientation: 'portrait' as const, zoom: 0.75 };
         }
@@ -95,6 +97,29 @@ export function WorkoutSession({
     const initialState = getInitialState();
     const [orientation, setOrientation] = useState<'landscape' | 'portrait'>(initialState.orientation);
     const [zoom, setZoom] = useState(initialState.zoom);
+
+    // Load orientation from saved settings after mount
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = localStorage.getItem('mediapipePoseSettings');
+                if (saved) {
+                    const settings = JSON.parse(saved);
+                    // Determine orientation from resolution
+                    const [w, h] = settings.resolution.split('x').map(Number);
+                    if (h > w) {
+                        setOrientation('portrait');
+                        setZoom(0.75);
+                    } else {
+                        setOrientation('landscape');
+                        setZoom(1);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load settings:', e);
+            }
+        }
+    }, []);
 
     // Refs for state values to avoid stale closures in callbacks
     const isRunningRef = useRef<boolean>(isRunning);

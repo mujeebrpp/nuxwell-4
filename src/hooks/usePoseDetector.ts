@@ -13,6 +13,14 @@ interface UsePoseDetectorOptions {
     videoElement: HTMLVideoElement | null;
     onPoseDetected?: (landmarks: Landmark[]) => void;
     running?: boolean;
+    settings?: {
+        cameraFacingMode?: string;
+        modelComplexity?: number;
+        minDetectionConfidence?: number;
+        minTrackingConfidence?: number;
+        smoothLandmarks?: boolean;
+        enableSegmentation?: boolean;
+    };
 }
 
 interface UsePoseDetectorReturn {
@@ -28,6 +36,7 @@ export function usePoseDetector({
     videoElement,
     onPoseDetected,
     running = true,
+    settings = {},
 }: UsePoseDetectorOptions): UsePoseDetectorReturn {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -38,6 +47,14 @@ export function usePoseDetector({
     const streamRef = useRef<MediaStream | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+    // Get settings with defaults
+    const cameraFacingMode = settings.cameraFacingMode || 'user';
+    const modelComplexity = settings.modelComplexity ?? 1;
+    const minDetectionConfidence = settings.minDetectionConfidence ?? 0.5;
+    const minTrackingConfidence = settings.minTrackingConfidence ?? 0.5;
+    const smoothLandmarks = settings.smoothLandmarks ?? true;
+    const enableSegmentation = settings.enableSegmentation ?? false;
+
     // Initialize camera stream
     const initCamera = useCallback(async () => {
         if (!videoElement) return null;
@@ -47,7 +64,7 @@ export function usePoseDetector({
                 video: {
                     width: 640,
                     height: 480,
-                    facingMode: 'user',
+                    facingMode: cameraFacingMode,
                 },
                 audio: false,
             });
@@ -68,7 +85,7 @@ export function usePoseDetector({
             setError('Camera access denied. Please allow camera access to use this feature.');
             return null;
         }
-    }, [videoElement]);
+    }, [videoElement, cameraFacingMode]);
 
     // Initialize MediaPipe Pose
     const initPose = useCallback(async () => {
@@ -85,11 +102,11 @@ export function usePoseDetector({
             });
 
             pose.setOptions({
-                modelComplexity: 1,
-                smoothLandmarks: true,
-                enableSegmentation: false,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5,
+                modelComplexity: modelComplexity as 0 | 1 | 2,
+                smoothLandmarks: smoothLandmarks,
+                enableSegmentation: enableSegmentation,
+                minDetectionConfidence: minDetectionConfidence,
+                minTrackingConfidence: minTrackingConfidence,
             });
 
             pose.onResults((results: any) => {
