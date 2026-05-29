@@ -610,6 +610,17 @@ export function WorkoutSession({
                             </>
                         )}
                     </div>
+
+                    {isRunning && (
+                        <Card className="bg-blue-50 border-blue-200 mt-4">
+                            <CardContent className="p-4">
+                                <h4 className="font-semibold text-blue-900 mb-2">Instructions</h4>
+                                <p className="text-blue-700 text-sm">
+                                    {exerciseConfig?.description || 'Follow the on-screen instructions to perform the exercise correctly.'}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 <RepCounter
@@ -621,17 +632,6 @@ export function WorkoutSession({
                     onToggleAudio={() => setEnabled(!isEnabled)}
                 />
             </div>
-
-            {isRunning && (
-                <Card className="bg-blue-50 border-blue-200">
-                    <CardContent className="p-4">
-                        <h4 className="font-semibold text-blue-900 mb-2">Instructions</h4>
-                        <p className="text-blue-700 text-sm">
-                            {exerciseConfig?.description || 'Follow the on-screen instructions to perform the exercise correctly.'}
-                        </p>
-                    </CardContent>
-                </Card>
-            )}
         </div>
     );
 }
