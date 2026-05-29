@@ -95,26 +95,19 @@ export function usePoseDetector({
         if (typeof window === 'undefined') return null;
 
         try {
-            const { Pose } = await import('@mediapipe/pose');
+            const { PoseLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision');
 
-            const pose = new Pose({
-                locateFile: (file: string) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+            const vision = await FilesetResolver.forVisionTasks(
+                'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm'
+            );
+
+            const pose = await PoseLandmarker.createFromOptions(vision, {
+                baseOptions: {
+                    modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task',
+                    delegate: 'GPU',
                 },
-            });
-
-            pose.setOptions({
-                modelComplexity: modelComplexity as 0 | 1 | 2,
-                smoothLandmarks: smoothLandmarks,
-                enableSegmentation: enableSegmentation,
-                minDetectionConfidence: minDetectionConfidence,
-                minTrackingConfidence: minTrackingConfidence,
-            });
-
-            pose.onResults((results: any) => {
-                if (results.poseLandmarks && onPoseDetected) {
-                    onPoseDetected(results.poseLandmarks);
-                }
+                runningMode: 'VIDEO',
+                numPoses: 1,
             });
 
             poseRef.current = pose;
@@ -126,13 +119,17 @@ export function usePoseDetector({
             setIsLoading(false);
             return null;
         }
-    }, [onPoseDetected, modelComplexity, smoothLandmarks, enableSegmentation, minDetectionConfidence, minTrackingConfidence]);
+    }, []);
 
     const processFrame = useCallback(async () => {
         if (!poseRef.current || !videoElementRef.current || !isRunningRef.current) return;
 
         try {
-            await poseRef.current.send({ image: videoElementRef.current });
+            const timestamp = performance.now();
+            const results = await poseRef.current.detectForVideo(videoElementRef.current, timestamp);
+            if (results.landmarks && results.landmarks.length > 0 && onPoseDetected) {
+                onPoseDetected(results.landmarks[0]);
+            }
         } catch (err) {
             console.error('Frame processing error:', err);
         }
@@ -140,7 +137,7 @@ export function usePoseDetector({
         if (isRunningRef.current) {
             animationFrameRef.current = requestAnimationFrame(processFrame);
         }
-    }, []);
+    }, [onPoseDetected]);
 
     const startPoseDetection = useCallback(async () => {
         if (!videoElementRef.current) return;

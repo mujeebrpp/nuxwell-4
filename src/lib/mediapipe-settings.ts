@@ -1,12 +1,12 @@
 // Default MediaPipe Pose settings
 export const defaultMediaPipeSettings = {
-    cameraFacingMode: 'user',
+    cameraFacingMode: 'user' as const,
     modelComplexity: 1,
     minDetectionConfidence: 0.5,
     minTrackingConfidence: 0.5,
     smoothLandmarks: true,
     enableSegmentation: false,
-    resolution: '720x1280', // Default to portrait 9:16
+    resolution: '720x1280' as const, // Default to portrait 9:16
     showSkeleton: true,
     audioFeedback: true,
     repCountDisplay: true,

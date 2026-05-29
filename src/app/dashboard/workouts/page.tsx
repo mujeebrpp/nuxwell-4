@@ -264,21 +264,21 @@ export default function WorkoutsPage() {
 
         if (fitnessGoal === 'weight_loss') {
             recommendations.push(
-                { type: 'jumpingJack', reason: 'Great cardio for burning calories' },
+                { type: 'jumping_jack', reason: 'Great cardio for burning calories' },
                 { type: 'squat', reason: 'High-intensity for fat burning' },
-                { type: 'lunge', reason: 'Full body HIIT movement' }
+                { type: 'side_step', reason: 'Full body HIIT movement' }
             );
         } else if (fitnessGoal === 'muscle_gain') {
             recommendations.push(
                 { type: 'squat', reason: 'Build lower body strength' },
-                { type: 'pushup', reason: 'Upper body muscle building' },
-                { type: 'lunge', reason: 'Leg strength and muscle' }
+                { type: 'bicep_curl', reason: 'Build upper body muscle' },
+                { type: 'overhead_press', reason: 'Leg strength and muscle' }
             );
         } else if (fitnessGoal === 'endurance') {
             recommendations.push(
-                { type: 'jumpingJack', reason: 'Sustained cardio for endurance' },
+                { type: 'jumping_jack', reason: 'Sustained cardio for endurance' },
                 { type: 'squat', reason: 'Long duration strength' },
-                { type: 'pushup', reason: 'Build stamina' }
+                { type: 'bicep_curl', reason: 'Build stamina' }
             );
         }
 
@@ -1171,7 +1171,7 @@ export default function WorkoutsPage() {
                             exerciseType={selectedExercise!}
                             onComplete={handleWorkoutComplete}
                             onExit={handleExitWorkout}
-                            exerciseConfig={exerciseConfig}
+                            exerciseConfigProp={exerciseConfig}
                         />
                     )}
                 </div>

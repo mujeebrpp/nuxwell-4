@@ -18,7 +18,10 @@ import {
     Award,
     Users,
     QrCode,
-    BarChart3
+    BarChart3,
+    Activity,
+    Target,
+    ArrowLeftRight,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/lib/hooks/use-auth'
@@ -26,6 +29,10 @@ import { useAuth } from '@/lib/hooks/use-auth'
 const sidebarLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/dashboard/workouts', label: 'Workouts', icon: Dumbbell },
+    { href: '/dashboard/posture', label: 'Posture', icon: Target },
+    { href: '/dashboard/mobility', label: 'Mobility', icon: Activity },
+    { href: '/dashboard/balance', label: 'Balance', icon: ArrowLeftRight },
+    { href: '/dashboard/swimming', label: 'Swimming', icon: Waves },
     { href: '/dashboard/pools', label: 'Pool Booking', icon: Waves },
     { href: '/dashboard/tea', label: 'Tea Hub', icon: Coffee },
     { href: '/dashboard/family', label: 'My Family', icon: Users },
