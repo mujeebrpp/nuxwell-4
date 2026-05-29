@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { CheckCircle, ArrowLeft } from 'lucide-react';
+import { CheckCircle, ArrowLeft, MonitorPlay, Smartphone, ZoomIn, ZoomOut, Camera, CameraOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useMediaPipePose } from '@/hooks/useMediaPipePose';
@@ -45,6 +45,9 @@ export default function PosturePage() {
     const [isAssessing, setIsAssessing] = useState(false);
     const [results, setResults] = useState<Record<string, { score: number }>>({});
     const [postureScore, setPostureScore] = useState(100);
+    const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('portrait');
+    const [zoom, setZoom] = useState(1);
+    const [showSkeleton, setShowSkeleton] = useState(true);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -54,7 +57,6 @@ export default function PosturePage() {
         onPoseDetected: (landmarks) => {
             const metrics = getPoseAngles(landmarks);
             if (metrics) {
-                // Calculate posture score based on torso alignment and symmetry
                 const newScore = Math.min(100, Math.max(0, Math.round(
                     ((metrics.torsoMetric + metrics.symmetryMetric) / 2) * 100
                 )));
@@ -123,16 +125,68 @@ export default function PosturePage() {
 
                     <Card>
                         <CardContent className="p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="text-sm text-slate-400 hidden sm:inline">Orientation</span>
+                                <Button
+                                    onClick={() => setOrientation(orientation === 'landscape' ? 'portrait' : 'landscape')}
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex items-center gap-2"
+                                >
+                                    {orientation === 'landscape' ? (
+                                        <>
+                                            <MonitorPlay className="w-4 h-4" />
+                                            <span className="hidden sm:inline">Landscape</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Smartphone className="w-4 h-4" />
+                                            <span className="hidden sm:inline">Portrait</span>
+                                        </>
+                                    )}
+                                </Button>
+                                <span className="text-sm text-slate-400 hidden sm:inline">Zoom</span>
+                                <div className="flex items-center gap-1">
+                                    <Button
+                                        onClick={() => setZoom(Math.max(0.5, zoom - 0.25))}
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 w-8 p-0"
+                                        disabled={zoom <= 0.5}
+                                    >
+                                        <ZoomOut className="w-4 h-4" />
+                                    </Button>
+                                    <span className="text-sm text-slate-600 min-w-[2rem] text-center">{zoom}x</span>
+                                    <Button
+                                        onClick={() => setZoom(Math.min(3, zoom + 0.25))}
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 w-8 p-0"
+                                        disabled={zoom >= 3}
+                                    >
+                                        <ZoomIn className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowSkeleton(!showSkeleton)}
+                                    title={showSkeleton ? 'Hide skeleton' : 'Show skeleton'}
+                                    className="h-8 w-8 p-0"
+                                >
+                                    {showSkeleton ? <Camera className="w-4 h-4" /> : <CameraOff className="w-4 h-4" />}
+                                </Button>
+                            </div>
+
                             <div className="relative mb-4">
                                 <CameraView
                                     videoRef={videoRef}
                                     canvasRef={canvasRef}
                                     landmarks={landmarks}
                                     isRunning={isAssessing}
-                                    width={720}
-                                    height={1280}
-                                    showSkeleton={true}
-                                    orientation="portrait"
+                                    showSkeleton={showSkeleton}
+                                    orientation={orientation}
+                                    zoom={zoom}
                                 />
                                 {isLoading && (
                                     <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 rounded-lg">
@@ -147,13 +201,13 @@ export default function PosturePage() {
                             </div>
 
                             <p className="text-slate-600 mb-4">{selectedAssessment?.instruction}</p>
-                            
+
                             <div className="flex gap-3 mb-4">
                                 <div className="flex-1 bg-emerald-100 rounded-lg p-3">
                                     <p className="text-sm font-medium text-emerald-700">Posture Score: {postureScore}%</p>
                                 </div>
                             </div>
-                            
+
                             <div className="flex gap-3">
                                 <Button
                                     onClick={stopAssessment}

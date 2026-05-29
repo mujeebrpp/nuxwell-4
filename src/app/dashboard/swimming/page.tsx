@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { CheckCircle, ArrowLeft, Shield } from 'lucide-react';
+import { CheckCircle, ArrowLeft, Shield, MonitorPlay, Smartphone, ZoomIn, ZoomOut, Camera, CameraOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useMediaPipePose } from '@/hooks/useMediaPipePose';
@@ -46,6 +46,9 @@ export default function SwimmingPage() {
     const [timer, setTimer] = useState(0);
     const [swimScore, setSwimScore] = useState(100);
     const [results, setResults] = useState<Record<string, { score: number; time: number }>>({});
+    const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('portrait');
+    const [zoom, setZoom] = useState(1);
+    const [showSkeleton, setShowSkeleton] = useState(true);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -56,7 +59,6 @@ export default function SwimmingPage() {
         onPoseDetected: (landmarks) => {
             const metrics = getPoseAngles(landmarks);
             if (metrics) {
-                // Calculate swimming readiness score based on body streamline and arm position
                 const newScore = Math.min(100, Math.max(0, Math.round(
                     ((metrics.torsoMetric + metrics.wristAboveHeadMetric) / 2) * 100
                 )));
@@ -120,8 +122,8 @@ export default function SwimmingPage() {
                             <div className="text-right">
                                 <p className="text-5xl font-bold">{readinessScore}%</p>
                                 <p className="text-sm text-blue-100">
-                                    {readinessScore >= 80 ? 'Excellent - Ready for all strokes!' : 
-                                     readinessScore >= 60 ? 'Good - Some limitations noted' : 
+                                    {readinessScore >= 80 ? 'Excellent - Ready for all strokes!' :
+                                     readinessScore >= 60 ? 'Good - Some limitations noted' :
                                      'Needs attention - Consider mobility work'}
                                 </p>
                             </div>
@@ -144,13 +146,13 @@ export default function SwimmingPage() {
                                     <h3 className="font-semibold text-slate-900">{assessment.name}</h3>
                                 </div>
                                 <p className="text-sm text-slate-600 mb-4">{assessment.description}</p>
-{results[assessment.id] ? (
-                                        <div className="flex items-center gap-2 text-emerald-600">
-                                            <CheckCircle className="w-5 h-5" />
-                                            <span className="font-medium">
-                                                Score: {results[assessment.id].score}% ({results[assessment.id].time}s)
-                                            </span>
-                                        </div>
+                                {results[assessment.id] ? (
+                                    <div className="flex items-center gap-2 text-emerald-600">
+                                        <CheckCircle className="w-5 h-5" />
+                                        <span className="font-medium">
+                                            Score: {results[assessment.id].score}% ({results[assessment.id].time}s)
+                                        </span>
+                                    </div>
                                 ) : (
                                     <Button className="w-full bg-emerald-500 hover:bg-emerald-600">
                                         Start Assessment
@@ -173,16 +175,68 @@ export default function SwimmingPage() {
 
                     <Card>
                         <CardContent className="p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="text-sm text-slate-400 hidden sm:inline">Orientation</span>
+                                <Button
+                                    onClick={() => setOrientation(orientation === 'landscape' ? 'portrait' : 'landscape')}
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex items-center gap-2"
+                                >
+                                    {orientation === 'landscape' ? (
+                                        <>
+                                            <MonitorPlay className="w-4 h-4" />
+                                            <span className="hidden sm:inline">Landscape</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Smartphone className="w-4 h-4" />
+                                            <span className="hidden sm:inline">Portrait</span>
+                                        </>
+                                    )}
+                                </Button>
+                                <span className="text-sm text-slate-400 hidden sm:inline">Zoom</span>
+                                <div className="flex items-center gap-1">
+                                    <Button
+                                        onClick={() => setZoom(Math.max(0.5, zoom - 0.25))}
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 w-8 p-0"
+                                        disabled={zoom <= 0.5}
+                                    >
+                                        <ZoomOut className="w-4 h-4" />
+                                    </Button>
+                                    <span className="text-sm text-slate-600 min-w-[2rem] text-center">{zoom}x</span>
+                                    <Button
+                                        onClick={() => setZoom(Math.min(3, zoom + 0.25))}
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 w-8 p-0"
+                                        disabled={zoom >= 3}
+                                    >
+                                        <ZoomIn className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowSkeleton(!showSkeleton)}
+                                    title={showSkeleton ? 'Hide skeleton' : 'Show skeleton'}
+                                    className="h-8 w-8 p-0"
+                                >
+                                    {showSkeleton ? <Camera className="w-4 h-4" /> : <CameraOff className="w-4 h-4" />}
+                                </Button>
+                            </div>
+
                             <div className="relative mb-4">
                                 <CameraView
                                     videoRef={videoRef}
                                     canvasRef={canvasRef}
                                     landmarks={landmarks}
                                     isRunning={isRunning}
-                                    width={720}
-                                    height={1280}
-                                    showSkeleton={true}
-                                    orientation="portrait"
+                                    showSkeleton={showSkeleton}
+                                    orientation={orientation}
+                                    zoom={zoom}
                                 />
                                 {isLoading && (
                                     <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 rounded-lg">
@@ -197,7 +251,7 @@ export default function SwimmingPage() {
                             </div>
 
                             <p className="text-slate-600 mb-4">{selectedAssessment?.instruction}</p>
-                            
+
                             <div className="flex gap-3 mb-4">
                                 <div className="flex-1 bg-slate-100 rounded-lg p-3">
                                     <p className="text-sm font-medium text-slate-700">Time: {timer}s</p>
@@ -206,7 +260,7 @@ export default function SwimmingPage() {
                                     <p className="text-sm font-medium text-blue-700">Swimming Score: {swimScore}%</p>
                                 </div>
                             </div>
-                            
+
                             <div className="flex gap-3">
                                 <Button
                                     onClick={stopAssessment}
