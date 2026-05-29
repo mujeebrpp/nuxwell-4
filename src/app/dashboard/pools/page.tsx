@@ -50,12 +50,10 @@ export default function PoolsPage() {
                     <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Pool Booking</h1>
                     <p className="text-slate-600 mt-1">Reserve lanes for your swim sessions</p>
                 </div>
-                <a href="/dashboard/member/book-pool">
-                    <Button className="bg-emerald-600 hover:bg-emerald-700">
+                <a href="/dashboard/pools/book" className="bg-emerald-600 hover:bg-emerald-700 text-white inline-flex items-center justify-center rounded-md px-3 py-2">
                         <Calendar className="h-4 w-4 mr-2" />
                         Book Now
-                    </Button>
-                </a>
+                    </a>
             </div>
 
             {loading ? (

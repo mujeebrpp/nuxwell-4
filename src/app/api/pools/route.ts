@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
         const branchId = searchParams.get('branchId')
 
         if (id) {
-            const pool = await prisma.pool.findUnique({
+const pool = await prisma.pool.findUnique({
                 where: { id },
                 include: { lanes: true },
             })

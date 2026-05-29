@@ -53,8 +53,9 @@ model Profile {
   exerciseRecords ExerciseRecord[]
 
   // Bookings
-  poolBookings PoolBooking[]
-  teaBookings  TeaBooking[]
+  poolBookings             PoolBooking[]
+  teaBookings              TeaBooking[]
+  familyRewardTransactions FamilyRewardTransaction[]
 
   // Trainer bookings
   trainerBookings TrainingBooking[] @relation("TrainerBookingsRelation")
@@ -85,11 +86,15 @@ model Family {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  primaryGuardian   Profile        @relation("PrimaryGuardian", fields: [primaryGuardianId], references: [userId], onDelete: Cascade)
-  secondaryGuardian Profile?       @relation("SecondaryGuardian", fields: [secondaryGuardianId], references: [userId], onDelete: Cascade)
-  members           FamilyMember[]
-  sharedRewards     RewardPoint[]
-  memberships       Membership[]
+  primaryGuardian       Profile                   @relation("PrimaryGuardian", fields: [primaryGuardianId], references: [userId], onDelete: Cascade)
+  secondaryGuardian     Profile?                  @relation("SecondaryGuardian", fields: [secondaryGuardianId], references: [userId], onDelete: Cascade)
+  members               FamilyMember[]
+  sharedRewards         RewardPoint[]
+  memberships           Membership[]
+  teaBookings           TeaBooking[]
+  teaSessions           TeaSession[]
+  teaPackageRedemptions TeaPackageRedemption[]
+  rewardTransactions    FamilyRewardTransaction[]
 }
 
 model FamilyMember {
@@ -111,19 +116,20 @@ model Membership {
   userId      String
   branchId    String?
   familyId    String?
-  type        String // individual, family, corporate
-  status      String    @default("active") // active, expired, suspended
+  type        String
+  status      String    @default("active")
   startDate   DateTime  @default(now())
   endDate     DateTime
   renewalDate DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  user        Profile       @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  branch      Branch?       @relation(fields: [branchId], references: [id])
-  family      Family?       @relation(fields: [familyId], references: [id])
-  bookings    PoolBooking[]
-  teaBookings TeaBooking[]
+  user            Profile       @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  branch          Branch?       @relation(fields: [branchId], references: [id])
+  family          Family?       @relation(fields: [familyId], references: [id])
+  bookings        PoolBooking[]
+  teaBookings     TeaBooking[]
+  teaBookingCount Int           @default(0)
 }
 
 // Multi-Branch Support
@@ -203,35 +209,141 @@ model TeaTable {
   id          String   @id @default(cuid())
   branchId    String
   tableNumber Int
-  capacity    Int // number of seats
-  location    String // indoor, outdoor
-  status      String   @default("available") // available, reserved, occupied
+  capacity    Int
+  location    String
+  status      String   @default("available")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   branch   Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
   bookings TeaBooking[]
+  sessions TeaSession[]
 }
 
 model TeaBooking {
-  id           String   @id @default(cuid())
-  userId       String
-  membershipId String?
-  tableId      String
-  date         DateTime
-  startTime    DateTime
-  endTime      DateTime
-  groupSize    Int?
-  foodOrder    Json? // pre-ordered items
-  status       String   @default("confirmed") // confirmed, cancelled, completed, no_show
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  membershipId   String?
+  familyId       String?
+  tableId        String
+  date           DateTime
+  startTime      DateTime
+  endTime        DateTime
+  groupSize      Int
+  foodOrder      Json?
+  specialRequest String?
+  depositAmount  Float?   @default(0)
+  depositPaid    Boolean  @default(false)
+  status         String   @default("confirmed")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user       Profile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  membership Membership? @relation(fields: [membershipId], references: [id], onDelete: Cascade)
-  table      TeaTable    @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  user       Profile        @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  membership Membership?    @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  family     Family?        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  table      TeaTable       @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  orderItems TeaOrderItem[]
 
   @@index([date, tableId])
+  @@index([userId, date])
+  @@index([familyId])
+  @@index([status])
+  @@index([date])
+}
+
+model TeaMenu {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  category    String
+  type        String   @default("individual")
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderItems TeaOrderItem[]
+
+  @@index([category])
+  @@index([isAvailable])
+}
+
+model TeaOrderItem {
+  id         String  @id @default(cuid())
+  bookingId  String
+  menuId     String
+  quantity   Int
+  unitPrice  Float
+  specialReq String?
+
+  booking TeaBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  menu    TeaMenu    @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([menuId])
+}
+
+model TeaCategory {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model TeaSession {
+  id        String    @id @default(cuid())
+  familyId  String
+  tableId   String?
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+  recurring Boolean   @default(false)
+  frequency String?
+  dayOfWeek Int?
+  endDate   DateTime?
+  groupSize Int
+  foodOrder Json?
+  status    String    @default("scheduled")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  family Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  table  TeaTable? @relation(fields: [tableId], references: [id], onDelete: Cascade)
+
+  @@index([familyId, date])
+  @@index([status])
+}
+
+model TeaPackage {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  sessions    Int
+  validDays   Int
+  discount    Float?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  redemptions TeaPackageRedemption[]
+
+  @@index([isActive])
+}
+
+model TeaPackageRedemption {
+  id        String   @id @default(cuid())
+  familyId  String
+  packageId String
+  usedAt    DateTime @default(now())
+
+  family  Family     @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  package TeaPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
+  @@index([packageId])
 }
 
 // Training Booking
@@ -323,12 +435,25 @@ model RewardPoint {
   userId    String?
   familyId  String?
   points    Int
-  type      String // visit, swim, workout, tea_purchase, family_challenge
-  sourceId  String? // reference to source (booking, workout, etc)
+  type      String
+  sourceId  String?
   createdAt DateTime @default(now())
 
   user   Profile? @relation(fields: [userId], references: [userId], onDelete: Cascade)
   family Family?  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+}
+
+model FamilyRewardTransaction {
+  id           String   @id @default(cuid())
+  familyId     String
+  points       Int
+  type         String
+  redeemedById String?
+  description  String?
+  createdAt    DateTime @default(now())
+
+  family     Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  redeemedBy Profile? @relation(fields: [redeemedById], references: [userId])
 }
 
 model RewardTransaction {
