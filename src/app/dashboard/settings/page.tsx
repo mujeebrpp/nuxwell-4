@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { User, Mail, Lock, Bell, Shield, Save, Eye, EyeOff, Scale, Target, Moon, Sun, Camera, Monitor, Settings as SettingsIcon, ChevronDown, ChevronUp, Video, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -45,6 +45,20 @@ export default function SettingsPage() {
 
     const supabase = createClient()
 
+    const applyDarkMode = useCallback((isDark: boolean) => {
+        if (isDark) {
+            document.documentElement.style.setProperty('--background', '#0F172A')
+            document.documentElement.style.setProperty('--foreground', '#F1F5F9')
+            document.documentElement.style.setProperty('--surface', '#1E293B')
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.style.setProperty('--background', '#F8FAFC')
+            document.documentElement.style.setProperty('--foreground', '#1E293B')
+            document.documentElement.style.setProperty('--surface', '#FFFFFF')
+            document.documentElement.classList.remove('dark')
+        }
+    }, [])
+
     useEffect(() => {
         const getUser = async () => {
             const { data: { user } } = await supabase.auth.getUser()
@@ -59,30 +73,16 @@ export default function SettingsPage() {
                     fitnessGoal: user.user_metadata?.fitness_goal || 'general_fitness',
                 }))
 
-                // Load dark mode preference from localStorage
                 const savedDarkMode = localStorage.getItem('darkMode')
                 if (savedDarkMode) {
-                    setDarkMode(savedDarkMode === 'true')
-                    applyDarkMode(savedDarkMode === 'true')
+                    const isDark = savedDarkMode === 'true'
+                    setDarkMode(isDark)
+                    applyDarkMode(isDark)
                 }
             }
         }
         getUser()
-    }, [supabase])
-
-    const applyDarkMode = (isDark: boolean) => {
-        if (isDark) {
-            document.documentElement.style.setProperty('--background', '#0F172A')
-            document.documentElement.style.setProperty('--foreground', '#F1F5F9')
-            document.documentElement.style.setProperty('--surface', '#1E293B')
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.style.setProperty('--background', '#F8FAFC')
-            document.documentElement.style.setProperty('--foreground', '#1E293B')
-            document.documentElement.style.setProperty('--surface', '#FFFFFF')
-            document.documentElement.classList.remove('dark')
-        }
-    }
+    }, [supabase, applyDarkMode])
 
     const toggleDarkMode = () => {
         const newDarkMode = !darkMode
@@ -107,7 +107,6 @@ export default function SettingsPage() {
 
             if (error) throw error
 
-            // Also update in database via API
             if (user) {
                 await fetch('/api/profile', {
                     method: 'PUT',

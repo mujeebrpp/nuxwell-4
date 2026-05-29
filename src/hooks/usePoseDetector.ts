@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Landmark, PoseLandmarks } from '@/lib/workout/poseUtils';
+import { Landmark } from '@/lib/workout/poseUtils';
 
 declare global {
     interface Window {
@@ -45,9 +45,9 @@ export function usePoseDetector({
     const poseRef = useRef<any>(null);
     const animationFrameRef = useRef<number>(0);
     const streamRef = useRef<MediaStream | null>(null);
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const videoElementRef = useRef<HTMLVideoElement | null>(null);
+    const isRunningRef = useRef(isRunning);
 
-    // Get settings with defaults
     const cameraFacingMode = settings.cameraFacingMode || 'user';
     const modelComplexity = settings.modelComplexity ?? 1;
     const minDetectionConfidence = settings.minDetectionConfidence ?? 0.5;
@@ -55,9 +55,13 @@ export function usePoseDetector({
     const smoothLandmarks = settings.smoothLandmarks ?? true;
     const enableSegmentation = settings.enableSegmentation ?? false;
 
-    // Initialize camera stream
+    useEffect(() => {
+        videoElementRef.current = videoElement;
+    }, [videoElement]);
+
     const initCamera = useCallback(async () => {
-        if (!videoElement) return null;
+        const el = videoElementRef.current;
+        if (!el) return null;
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -69,12 +73,12 @@ export function usePoseDetector({
                 audio: false,
             });
 
-            videoElement.srcObject = stream;
+            el.srcObject = stream;
             streamRef.current = stream;
 
             await new Promise<void>((resolve) => {
-                videoElement.onloadedmetadata = () => {
-                    videoElement.play();
+                el.onloadedmetadata = () => {
+                    el.play();
                     resolve();
                 };
             });
@@ -85,14 +89,12 @@ export function usePoseDetector({
             setError('Camera access denied. Please allow camera access to use this feature.');
             return null;
         }
-    }, [videoElement, cameraFacingMode]);
+    }, [cameraFacingMode]);
 
-    // Initialize MediaPipe Pose
     const initPose = useCallback(async () => {
         if (typeof window === 'undefined') return null;
 
         try {
-            // Dynamic import for client-side only
             const { Pose } = await import('@mediapipe/pose');
 
             const pose = new Pose({
@@ -124,26 +126,24 @@ export function usePoseDetector({
             setIsLoading(false);
             return null;
         }
-    }, [onPoseDetected]);
+    }, [onPoseDetected, modelComplexity, smoothLandmarks, enableSegmentation, minDetectionConfidence, minTrackingConfidence]);
 
-    // Process frame
     const processFrame = useCallback(async () => {
-        if (!poseRef.current || !videoElement || !isRunning) return;
+        if (!poseRef.current || !videoElementRef.current || !isRunningRef.current) return;
 
         try {
-            await poseRef.current.send({ image: videoElement });
+            await poseRef.current.send({ image: videoElementRef.current });
         } catch (err) {
             console.error('Frame processing error:', err);
         }
 
-        if (isRunning) {
+        if (isRunningRef.current) {
             animationFrameRef.current = requestAnimationFrame(processFrame);
         }
-    }, [videoElement, isRunning]);
+    }, []);
 
-    // Start pose detection
     const startPoseDetection = useCallback(async () => {
-        if (!videoElement) return;
+        if (!videoElementRef.current) return;
 
         setIsLoading(true);
         setError(null);
@@ -160,15 +160,15 @@ export function usePoseDetector({
             return;
         }
 
+        isRunningRef.current = true;
         setIsRunning(true);
         setIsLoading(false);
 
-        // Start processing frames
-        processFrame();
-    }, [videoElement, initCamera, initPose, processFrame]);
+        animationFrameRef.current = requestAnimationFrame(processFrame);
+    }, [initCamera, initPose, processFrame]);
 
-    // Stop pose detection
     const stopPoseDetection = useCallback(() => {
+        isRunningRef.current = false;
         setIsRunning(false);
 
         if (animationFrameRef.current) {
@@ -181,24 +181,22 @@ export function usePoseDetector({
             streamRef.current = null;
         }
 
-        if (videoElement) {
-            videoElement.srcObject = null;
+        if (videoElementRef.current) {
+            videoElementRef.current.srcObject = null;
         }
-    }, [videoElement]);
+    }, []);
 
-    // Cleanup on unmount
     useEffect(() => {
         return () => {
             stopPoseDetection();
         };
     }, [stopPoseDetection]);
 
-    // Auto-start when running changes to true
     useEffect(() => {
-        if (running && videoElement && !isRunning) {
+        if (running && videoElementRef.current && !isRunningRef.current) {
             startPoseDetection();
         }
-    }, [running, videoElement, isRunning, startPoseDetection]);
+    }, [running, startPoseDetection]);
 
     return {
         isLoading,

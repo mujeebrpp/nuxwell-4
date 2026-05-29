@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
     Camera,
     Video,
@@ -21,20 +21,17 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 
-// MediaPipe Pose model complexity options
 const modelComplexityOptions = [
     { value: 0, label: 'Lightweight (0)', description: 'Fastest performance, lowest accuracy' },
     { value: 1, label: 'Balanced (1)', description: 'Good balance between speed and accuracy (default)' },
     { value: 2, label: 'Full (2)', description: 'Highest accuracy, slower performance' },
 ]
 
-// Camera facing mode options
 const cameraFacingModes = [
     { value: 'user', label: 'Front Camera', icon: Smartphone, description: 'Use the front-facing camera (selfie view)' },
     { value: 'environment', label: 'Back Camera', icon: Camera, description: 'Use the rear-facing camera' },
 ]
 
-// Resolution options
 const resolutionOptions = [
     { value: '640x480', label: '640 x 480', aspect: '4:3', orientation: 'landscape' },
     { value: '1280x720', label: '1280 x 720', aspect: '16:9', orientation: 'landscape' },
@@ -43,7 +40,6 @@ const resolutionOptions = [
     { value: '1080x1920', label: '1080 x 1920', aspect: '9:16', orientation: 'portrait' },
 ]
 
-// Default settings
 const defaultSettings = {
     cameraFacingMode: 'user',
     modelComplexity: 1,
@@ -51,7 +47,7 @@ const defaultSettings = {
     minTrackingConfidence: 0.5,
     smoothLandmarks: true,
     enableSegmentation: false,
-    resolution: '720x1280', // Default to portrait 9:16
+    resolution: '720x1280',
     showSkeleton: true,
     audioFeedback: true,
     repCountDisplay: true,
@@ -65,11 +61,11 @@ export default function MediaPipeSettingsPage() {
     const [testingCamera, setTestingCamera] = useState(false)
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
     const videoRef = useRef<HTMLVideoElement | null>(null)
+    const settingsLoadedRef = useRef(false);
 
     const [settings, setSettings] = useState(defaultSettings)
 
-    // Load settings from localStorage on mount
-    useEffect(() => {
+    const loadSettings = useCallback(() => {
         const savedSettings = localStorage.getItem('mediapipePoseSettings')
         if (savedSettings) {
             try {
@@ -78,23 +74,10 @@ export default function MediaPipeSettingsPage() {
                 console.error('Failed to parse saved settings:', e)
             }
         }
+    }, []);
 
-        // Get available cameras
-        getAvailableCameras()
-    }, [])
-
-    // Cleanup camera stream on unmount
-    useEffect(() => {
-        return () => {
-            if (cameraStream) {
-                cameraStream.getTracks().forEach(track => track.stop())
-            }
-        }
-    }, [cameraStream])
-
-    const getAvailableCameras = async () => {
+    const getAvailableCameras = useCallback(async () => {
         try {
-            // Request permission first
             await navigator.mediaDevices.getUserMedia({ video: true })
             const devices = await navigator.mediaDevices.enumerateDevices()
             const cameras = devices.filter(device => device.kind === 'videoinput')
@@ -103,7 +86,15 @@ export default function MediaPipeSettingsPage() {
             console.error('Error getting cameras:', error)
             setErrorMessage('Could not access camera. Please grant camera permission.')
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        if (!settingsLoadedRef.current) {
+            settingsLoadedRef.current = true;
+            loadSettings();
+            getAvailableCameras();
+        }
+    }, [loadSettings, getAvailableCameras]);
 
     const testCamera = async () => {
         setTestingCamera(true)

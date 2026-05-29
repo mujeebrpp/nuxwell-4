@@ -10,6 +10,7 @@ import {
     EXERCISE_CONFIGS,
 } from '@/lib/workout/exerciseDetector';
 import { Landmark } from '@/lib/workout/poseUtils';
+import * as poseUtils from '@/lib/workout/poseUtils';
 
 interface UseExerciseDetectorOptions {
     exerciseType: ExerciseType;
@@ -35,24 +36,31 @@ export function useExerciseDetector({
     );
     const [currentExercise, setCurrentExercise] = useState<ExerciseType>(exerciseType);
 
-    // Additional state for exercise-specific tracking
-    const additionalStateRef = useRef<any>({
+    const additionalStateRef = useRef<{
+        prevKneeAngle: number;
+        prevSide: 'left' | 'right';
+        holdTimeRef: { current: number };
+        burpeeState: { phase: string };
+    }>({
         prevKneeAngle: 0,
-        prevSide: 'left' as 'left' | 'right',
+        prevSide: 'left',
         holdTimeRef: { current: 0 },
         burpeeState: { phase: 'start' },
     });
 
-    // Update when exercise type changes
+    const prevExerciseTypeRef = useRef(exerciseType);
     useEffect(() => {
-        setCurrentExercise(exerciseType);
-        setExerciseState(createDefaultExerciseState());
-        additionalStateRef.current = {
-            prevKneeAngle: 0,
-            prevSide: 'left',
-            holdTimeRef: { current: 0 },
-            burpeeState: { phase: 'start' },
-        };
+        if (prevExerciseTypeRef.current !== exerciseType) {
+            prevExerciseTypeRef.current = exerciseType;
+            setCurrentExercise(exerciseType);
+            setExerciseState(createDefaultExerciseState());
+            additionalStateRef.current = {
+                prevKneeAngle: 0,
+                prevSide: 'left',
+                holdTimeRef: { current: 0 },
+                burpeeState: { phase: 'start' },
+            };
+        }
     }, [exerciseType]);
 
     // Reset exercise state
@@ -78,7 +86,7 @@ export function useExerciseDetector({
 
             // Update additional state
             if (currentExercise === 'squat' || currentExercise === 'mountainClimber') {
-                const angles = landmarks ? (require('@/lib/workout/poseUtils') as any).getPoseAngles(landmarks) : null;
+                const angles = landmarks ? poseUtils.getPoseAngles(landmarks) : null;
                 if (angles) {
                     additionalStateRef.current.prevKneeAngle =
                         (angles.leftKneeAngle + angles.rightKneeAngle) / 2;

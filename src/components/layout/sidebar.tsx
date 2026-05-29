@@ -12,14 +12,26 @@ import {
     Settings,
     LogOut,
     Menu,
-    X
+    X,
+    Waves,
+    Coffee,
+    Award,
+    Users,
+    QrCode,
+    BarChart3
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/lib/hooks/use-auth'
 
 const sidebarLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/dashboard/workouts', label: 'Workouts', icon: Calendar },
+    { href: '/dashboard/workouts', label: 'Workouts', icon: Dumbbell },
+    { href: '/dashboard/pools', label: 'Pool Booking', icon: Waves },
+    { href: '/dashboard/tea', label: 'Tea Hub', icon: Coffee },
+    { href: '/dashboard/family', label: 'My Family', icon: Users },
+    { href: '/dashboard/rewards', label: 'Rewards', icon: Award },
+    { href: '/dashboard/qr', label: 'QR Self-Service', icon: QrCode },
+    { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/dashboard/meals', label: 'Meals', icon: Utensils },
     { href: '/dashboard/progress', label: 'Progress', icon: TrendingUp },
     { href: '/dashboard/profile', label: 'Profile', icon: User },
@@ -27,10 +39,9 @@ const sidebarLinks = [
 
 export function Sidebar() {
     const pathname = usePathname()
-    const { user, signOut } = useAuth()
+    const { user, profile, signOut } = useAuth()
     const router = useRouter()
     const [isMobileOpen, setIsMobileOpen] = useState(false)
-
 
     const handleSignOut = async () => {
         await signOut()
@@ -43,11 +54,11 @@ export function Sidebar() {
             <div className="border-b border-slate-200 px-4 py-4">
                 <Link href="/" className="flex items-center gap-3 rounded-2xl px-2 py-1">
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 shadow-lg shadow-emerald-500/20">
-                        <Dumbbell className="h-5 w-5 text-emerald-400" />
+                        <Waves className="h-5 w-5 text-emerald-400" />
                     </div>
                     <div>
                         <p className="font-semibold tracking-tight text-slate-950">Nuxwell</p>
-                        <p className="text-xs text-slate-500">Wellness control center</p>
+                        <p className="text-xs text-slate-500">Wellness & Tea Hub</p>
                     </div>
                 </Link>
             </div>
@@ -63,11 +74,11 @@ export function Sidebar() {
                             href={link.href}
                             onClick={() => setIsMobileOpen(false)}
                             className={`flex items-center gap-3 rounded-2xl px-4 py-3 font-medium transition-all ${isActive
-                                ? 'bg-slate-950 text-white shadow-lg shadow-slate-300/40'
-                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
+                                : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
                                 }`}
                         >
-                            <link.icon className={`h-5 w-5 ${isActive ? 'text-emerald-400' : 'text-slate-400'}`} />
+                            <link.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-emerald-500'}`} />
                             {link.label}
                         </Link>
                     )
@@ -76,18 +87,18 @@ export function Sidebar() {
 
             <div className="border-t border-slate-200 p-4 space-y-2">
                 {user && (
-                    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500">
+                    <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/50 px-4 py-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600">
                             <span className="text-sm font-medium text-white">
-                                {user.email?.charAt(0).toUpperCase()}
+                                {profile?.fullName?.charAt(0) || user.email?.charAt(0).toUpperCase()}
                             </span>
                         </div>
                         <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-medium text-slate-900">
-                                {user.email?.split('@')[0]}
+                                {profile?.fullName || user.email?.split('@')[0]}
                             </p>
-                            <p className="truncate text-xs text-slate-500">
-                                {user.email}
+                            <p className="truncate text-xs text-slate-500 capitalize">
+                                {profile?.role?.toLowerCase()} member
                             </p>
                         </div>
                     </div>
@@ -95,9 +106,9 @@ export function Sidebar() {
                 <Link
                     href="/dashboard/settings"
                     onClick={() => setIsMobileOpen(false)}
-                    className="flex items-center gap-3 rounded-2xl px-4 py-3 font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-950"
+                    className="flex items-center gap-3 rounded-2xl px-4 py-3 font-medium text-slate-600 transition-all hover:bg-emerald-50 hover:text-emerald-700"
                 >
-                    <Settings className="h-5 w-5 text-slate-400" />
+                    <Settings className="h-5 w-5 text-emerald-500" />
                     Settings
                 </Link>
                 <button
@@ -116,20 +127,20 @@ export function Sidebar() {
 
     return (
         <>
-            <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
+            <div className="sticky top-0 z-40 border-b border-emerald-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
                 <div className="flex items-center justify-between gap-3">
                     <Link href="/dashboard" className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950">
-                            <Dumbbell className="h-5 w-5 text-emerald-400" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600">
+                            <Waves className="h-5 w-5 text-white" />
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-slate-950">Nuxwell</p>
-                            <p className="text-xs text-slate-500">Dashboard</p>
+                            <p className="text-xs text-slate-500">Wellness Hub</p>
                         </div>
                     </Link>
                     <button
                         onClick={() => setIsMobileOpen(!isMobileOpen)}
-                        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-200 bg-white text-emerald-700 shadow-sm"
                         aria-label="Toggle sidebar"
                         aria-expanded={isMobileOpen}
                     >
@@ -142,7 +153,7 @@ export function Sidebar() {
                 <div className="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-sm lg:hidden" onClick={() => setIsMobileOpen(false)} />
             )}
 
-            <aside className={`fixed inset-y-0 left-0 z-50 flex w-[86%] max-w-72 flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-300 lg:w-72 lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:z-30`}>
+            <aside className={`fixed inset-y-0 left-0 z-50 flex w-[86%] max-w-72 flex-col border-r border-emerald-200 bg-white shadow-2xl transition-transform duration-300 lg:w-72 lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:z-30`}>
                 {sidebarContent}
             </aside>
         </>

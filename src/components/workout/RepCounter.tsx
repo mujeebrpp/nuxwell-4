@@ -28,6 +28,19 @@ export function RepCounter({
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
+    const getScoreColor = (score: number) => {
+        if (score >= 80) return 'text-emerald-600';
+        if (score >= 60) return 'text-amber-600';
+        return 'text-red-600';
+    };
+
+    const getScoreLabel = (score: number) => {
+        if (score >= 80) return 'Excellent';
+        if (score >= 60) return 'Good';
+        if (score >= 40) return 'Fair';
+        return 'Needs Work';
+    };
+
     return (
         <Card className="bg-white shadow-lg">
             <CardContent className="p-6">
@@ -68,15 +81,43 @@ export function RepCounter({
                     </div>
                 </div>
 
+                {/* Form Score */}
+                {exerciseState.formScore !== undefined && (
+                    <div className="mb-6 p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-slate-600">Form Score</span>
+                            <span className={`text-sm font-bold ${getScoreColor(exerciseState.formScore)}`}>
+                                {getScoreLabel(exerciseState.formScore)}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1 w-full bg-slate-200 rounded-full h-3">
+                                <div
+                                    className={`h-3 rounded-full transition-all ${exerciseState.formScore >= 80
+                                        ? 'bg-emerald-500'
+                                        : exerciseState.formScore >= 60
+                                            ? 'bg-amber-500'
+                                            : 'bg-red-500'
+                                    }`}
+                                    style={{ width: `${exerciseState.formScore}%` }}
+                                />
+                            </div>
+                            <span className={`text-2xl font-bold ${getScoreColor(exerciseState.formScore)}`}>
+                                {Math.round(exerciseState.formScore)}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
                 {/* Form Feedback */}
                 <div
                     className={`
-            flex items-center justify-center gap-2 p-3 rounded-lg mb-6
-            ${exerciseState.isFormGood
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-amber-50 text-amber-700'
-                        }
-          `}
+                flex items-center justify-center gap-2 p-3 rounded-lg mb-6
+                ${exerciseState.isFormGood
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-amber-50 text-amber-700'
+                    }
+                `}
                 >
                     {exerciseState.isFormGood ? (
                         <CheckCircle className="w-5 h-5" />
@@ -105,7 +146,7 @@ export function RepCounter({
                     </div>
                 </div>
 
-                {/* Confidence Indicator */}
+                {/* Detection Confidence */}
                 <div className="mt-4">
                     <div className="flex items-center justify-between text-sm mb-1">
                         <span className="text-slate-500">Detection Confidence</span>
@@ -116,14 +157,13 @@ export function RepCounter({
                     <div className="w-full bg-slate-200 rounded-full h-2">
                         <div
                             className={`
-                h-2 rounded-full transition-all
-                ${exerciseState.confidence > 0.7
-                                    ? 'bg-emerald-500'
-                                    : exerciseState.confidence > 0.4
-                                        ? 'bg-amber-500'
-                                        : 'bg-red-500'
-                                }
-              `}
+                        h-2 rounded-full transition-all
+                        ${exerciseState.confidence > 0.7
+                                ? 'bg-emerald-500'
+                                : exerciseState.confidence > 0.4
+                                    ? 'bg-amber-500'
+                                    : 'bg-red-500'
+                            }`}
                             style={{ width: `${exerciseState.confidence * 100}%` }}
                         />
                     </div>

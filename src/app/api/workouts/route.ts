@@ -1,46 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma/client'
 
-// GET /api/workouts - Get all workouts or filter by userId
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url)
         const userId = searchParams.get('userId')
         const id = searchParams.get('id')
 
-        // Get single workout by ID
-        if (id) {
-            const workout = await prisma.workout.findUnique({
-                where: { id },
-                include: {
-                    profile: true,
-                },
-            })
+        const where: any = {}
+        if (userId) where.userId = userId
+        if (id) where.id = id
 
-            if (!workout) {
-                return NextResponse.json({ error: 'Workout not found' }, { status: 404 })
-            }
-
-            return NextResponse.json(workout)
-        }
-
-        // Get workouts by userId
-        if (userId) {
-            const workouts = await prisma.workout.findMany({
-                where: { userId },
-                include: {
-                    profile: true,
-                },
-                orderBy: {
-                    completedAt: 'desc',
-                },
-            })
-
-            return NextResponse.json(workouts)
-        }
-
-        // Get all workouts
         const workouts = await prisma.workout.findMany({
+            where,
             include: {
                 profile: true,
             },
@@ -48,6 +20,12 @@ export async function GET(request: NextRequest) {
                 completedAt: 'desc',
             },
         })
+
+        if (id) {
+            const workout = workouts[0]
+            if (!workout) return NextResponse.json({ error: 'Workout not found' }, { status: 404 })
+            return NextResponse.json(workout)
+        }
 
         return NextResponse.json(workouts)
     } catch (error) {

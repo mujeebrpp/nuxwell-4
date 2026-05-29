@@ -17,6 +17,8 @@ export const POSE_LANDMARKS = {
     RIGHT_KNEE: 26,
     LEFT_ANKLE: 27,
     RIGHT_ANKLE: 28,
+    LEFT_FOOT: 31,
+    RIGHT_FOOT: 32,
 } as const;
 
 // Landmark type
@@ -25,6 +27,8 @@ export interface Landmark {
     y: number;
     z: number;
     visibility?: number;
+    _x?: number;
+    _y?: number;
 }
 
 export interface PoseLandmarks {
