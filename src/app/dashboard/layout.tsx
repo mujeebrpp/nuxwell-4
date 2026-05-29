@@ -10,7 +10,7 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode
 }) {
-    const { user, profile, loading } = useAuth()
+    const { user, profile, loading, hasRole } = useAuth()
     const router = useRouter()
 
     useEffect(() => {
@@ -21,19 +21,27 @@ export default function DashboardLayout({
 
     useEffect(() => {
         if (!loading && user && profile) {
-            const currentPath = window.location.pathname
+            const pathname = window.location.pathname
 
-            if (profile.role === 'ADMIN' && !currentPath.startsWith('/dashboard/admin')) {
-                router.push('/dashboard/admin')
-            } else if (profile.role === 'TRAINER' && !currentPath.startsWith('/dashboard/trainer')) {
-                router.push('/dashboard/trainer')
-            } else if (profile.role === 'MEMBER' && !currentPath.startsWith('/dashboard/member')) {
-                router.push('/dashboard/member')
-            } else if (profile.role === 'USER' && !currentPath.startsWith('/dashboard/user')) {
-                router.push('/dashboard/user')
+            if (hasRole(['ADMIN', 'SUPERADMIN', 'MANAGER'])) {
+                if (!pathname.startsWith('/dashboard/admin')) {
+                    router.push('/dashboard/admin')
+                }
+            } else if (profile.role === 'TRAINER') {
+                if (!pathname.startsWith('/dashboard/trainer')) {
+                    router.push('/dashboard/trainer')
+                }
+            } else if (profile.role === 'LIFEGUARD') {
+                if (!pathname.startsWith('/dashboard/lifeguard')) {
+                    router.push('/dashboard/lifeguard')
+                }
+            } else if (profile.role === 'MEMBER' || profile.role === 'USER') {
+                if (!pathname.startsWith('/dashboard/member')) {
+                    router.push('/dashboard/member')
+                }
             }
         }
-    }, [user, profile, loading, router])
+    }, [user, profile, loading, router, hasRole])
 
     if (loading) {
         return (
@@ -48,7 +56,7 @@ export default function DashboardLayout({
     }
 
     return (
-        <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.10),_transparent_30%),linear-gradient(180deg,#f8fafc_0%,#ffffff_100%)]">
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.10),_transparent_30%),linear-gradient(180deg,#f8fafc_0%,#ffffff_100%)]" suppressHydrationWarning>
             <Sidebar />
             <main className="min-h-screen lg:pl-72">
                 <div className="px-4 py-4 sm:px-6 sm:py-6 lg:p-8">

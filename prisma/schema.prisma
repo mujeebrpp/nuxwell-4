@@ -1,8 +1,5 @@
 // Nuxwell Prisma Schema
-// Wellness Fitness Platform Database
-// Note: Profile table is linked to Supabase auth.users via userId field.
-// Since Supabase auth is managed internally, we use a logical relation
-// (userId maps to auth.users.id) rather than a database foreign key.
+// Wellness Fitness Platform Database - Family Tea Hub & Aquatic Wellness Club
 
 generator client {
   provider = "prisma-client-js"
@@ -12,99 +9,490 @@ datasource db {
   provider = "postgresql"
 }
 
-// Prisma Seed Configuration
-// Run with: npx prisma db seed
-// Or: npm run prisma:seed
-
-
 // User Role Enum
 enum Role {
   ADMIN
   TRAINER
+  LIFEGUARD
+  MANAGER
+  SUPERADMIN
   MEMBER
-  USER
 }
 
 // User Profile - extends Supabase Auth
-// The userId field directly corresponds to Supabase auth.users.id
-// This is the PRIMARY KEY since each profile is 1:1 with a Supabase user
 model Profile {
-  userId       String    @id // Primary key = Supabase auth.users.id
-  email        String    @unique
-  fullName     String?
-  avatarUrl    String?
-  weight       Float?
-  weightUnit   String?   @default("kg") // "kg" or "lbs"
-  height       Float?
-  fitnessGoal  String?   // e.g., "weight_loss", "muscle_gain", "maintenance"
-  role         Role      @default(USER)
+  userId      String    @id
+  email       String    @unique
+  fullName    String?
+  avatarUrl   String?
+  phone       String?
+  dateOfBirth DateTime?
+  weight      Float?
+  weightUnit  String?   @default("kg")
+  height      Float?
+  fitnessGoal String?
+  role        Role      @default(MEMBER)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Family relations
+  primaryFamilies   Family[]       @relation("PrimaryGuardian")
+  secondaryFamilies Family[]       @relation("SecondaryGuardian")
+  familyMemberLinks FamilyMember[] @relation("FamilyMemberUser")
+
+  // Membership
+  memberships Membership[]
+
+  // Workouts
+  workouts     Workout[]
+  workoutPlans WorkoutPlan[]
+
+  // Wellness
+  meals           Meal[]
+  progress        Progress[]
+  exerciseRecords ExerciseRecord[]
+
+  // Bookings
+  poolBookings PoolBooking[]
+  teaBookings  TeaBooking[]
+
+  // Trainer bookings
+  trainerBookings TrainingBooking[] @relation("TrainerBookingsRelation")
+
+  // Rewards
+  rewardPoints       RewardPoint[]
+  rewardTransactions RewardTransaction[]
+
+  // Notifications
+  notifications Notification[]
+
+  // QR Self-Service
+  lockerOccupancies Locker[]
+  equipmentRentals  EquipmentRental[]
+
+  // Wellness scores
+  wellnessScores   WellnessScore[]
+  trainingBookings TrainingBooking[]
+  tickets          Ticket[]
+}
+
+// Family Account System
+model Family {
+  id                  String   @id @default(cuid())
+  name                String
+  primaryGuardianId   String
+  secondaryGuardianId String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  primaryGuardian   Profile        @relation("PrimaryGuardian", fields: [primaryGuardianId], references: [userId], onDelete: Cascade)
+  secondaryGuardian Profile?       @relation("SecondaryGuardian", fields: [secondaryGuardianId], references: [userId], onDelete: Cascade)
+  members           FamilyMember[]
+  sharedRewards     RewardPoint[]
+  memberships       Membership[]
+}
+
+model FamilyMember {
+  id         String   @id @default(cuid())
+  familyId   String
+  userId     String
+  memberType String   @default("child") // child, senior
+  createdAt  DateTime @default(now())
+
+  family Family  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   Profile @relation("FamilyMemberUser", fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([familyId, userId])
+}
+
+// Membership System
+model Membership {
+  id          String    @id @default(cuid())
+  userId      String
+  branchId    String?
+  familyId    String?
+  type        String // individual, family, corporate
+  status      String    @default("active") // active, expired, suspended
+  startDate   DateTime  @default(now())
+  endDate     DateTime
+  renewalDate DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        Profile       @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  branch      Branch?       @relation(fields: [branchId], references: [id])
+  family      Family?       @relation(fields: [familyId], references: [id])
+  bookings    PoolBooking[]
+  teaBookings TeaBooking[]
+}
+
+// Multi-Branch Support
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  phone     String?
+  email     String?
+  capacity  Int? // Max members
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pools       Pool[]
+  teaTables   TeaTable[]
+  staff       Staff[]
+  memberships Membership[]
+  events      Event[]
+  lockers     Locker[]
+  equipment   Equipment[]
+}
+
+// Pool System
+model Pool {
+  id        String   @id @default(cuid())
+  branchId  String
+  name      String
+  type      String // large_lap, small_lap, kids
+  length    Float // meters
+  width     Float // meters
+  depth     Float // meters
+  capacity  Int // max people
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch   Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  lanes    PoolLane[]
+  bookings PoolBooking[]
+}
+
+model PoolLane {
+  id         String   @id @default(cuid())
+  poolId     String
+  laneNumber Int
+  status     String   @default("available") // available, occupied, maintenance
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  pool     Pool          @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  bookings PoolBooking[]
+}
+
+// Pool Booking
+model PoolBooking {
+  id           String   @id @default(cuid())
+  userId       String
+  membershipId String?
+  poolId       String
+  laneId       String?
+  date         DateTime
+  startTime    DateTime
+  endTime      DateTime
+  status       String   @default("confirmed") // confirmed, cancelled, completed, no_show
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       Profile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  membership Membership? @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  pool       Pool        @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  lane       PoolLane?   @relation(fields: [laneId], references: [id], onDelete: Cascade)
+
+  @@index([date, poolId])
+}
+
+// Tea Hub System
+model TeaTable {
+  id          String   @id @default(cuid())
+  branchId    String
+  tableNumber Int
+  capacity    Int // number of seats
+  location    String // indoor, outdoor
+  status      String   @default("available") // available, reserved, occupied
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  branch   Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  bookings TeaBooking[]
+}
+
+model TeaBooking {
+  id           String   @id @default(cuid())
+  userId       String
+  membershipId String?
+  tableId      String
+  date         DateTime
+  startTime    DateTime
+  endTime      DateTime
+  groupSize    Int?
+  foodOrder    Json? // pre-ordered items
+  status       String   @default("confirmed") // confirmed, cancelled, completed, no_show
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       Profile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  membership Membership? @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  table      TeaTable    @relation(fields: [tableId], references: [id], onDelete: Cascade)
+
+  @@index([date, tableId])
+}
+
+// Training Booking
+model TrainingBooking {
+  id        String   @id @default(cuid())
+  userId    String
+  trainerId String?
+  type      String // functional_training, swim_lesson, family_activity
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+  status    String   @default("confirmed") // confirmed, cancelled, completed
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  user           Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  trainerProfile Profile? @relation("TrainerBookingsRelation", fields: [trainerId], references: [userId], onDelete: Cascade)
+}
+
+// QR Self-Service System
+model Locker {
+  id           String    @id @default(cuid())
+  branchId     String
+  lockerNumber Int
+  status       String    @default("available") // available, occupied, maintenance, reserved
+  userId       String? // current occupant
+  reservedAt   DateTime?
+  expiresAt    DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  workouts     Workout[]
-  workoutPlans WorkoutPlan[]
-  meals        Meal[]
-  progress     Progress[]
+  branch Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  user   Profile? @relation(fields: [userId], references: [userId])
+}
+
+model Equipment {
+  id           String   @id @default(cuid())
+  branchId     String
+  name         String
+  category     String // goggles, kickboard, floatation, training
+  totalQty     Int
+  availableQty Int
+  condition    String   @default("good") // good, fair, maintenance, retired
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  branch  Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  rentals EquipmentRental[]
+}
+
+model EquipmentRental {
+  id          String    @id @default(cuid())
+  userId      String
+  equipmentId String
+  quantity    Int
+  checkoutAt  DateTime  @default(now())
+  dueAt       DateTime
+  returnedAt  DateTime?
+  status      String    @default("active") // active, returned, overdue
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user      Profile   @relation(fields: [userId], references: [userId])
+  equipment Equipment @relation(fields: [equipmentId], references: [id])
+}
+
+// Wellness Scoring Engine
+model WellnessScore {
+  id                  String   @id @default(cuid())
+  userId              String
+  score               Int
+  date                DateTime @default(now())
+  type                String   @default("daily") // daily, weekly, monthly
+  workoutAttendance   Int?     @default(0)
+  poolAttendance      Int?     @default(0)
+  activityStreak      Int?     @default(0)
+  familyParticipation Int?     @default(0)
+  createdAt           DateTime @default(now())
+
+  user Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+// Rewards System
+model RewardPoint {
+  id        String   @id @default(cuid())
+  userId    String?
+  familyId  String?
+  points    Int
+  type      String // visit, swim, workout, tea_purchase, family_challenge
+  sourceId  String? // reference to source (booking, workout, etc)
+  createdAt DateTime @default(now())
+
+  user   Profile? @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  family Family?  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+}
+
+model RewardTransaction {
+  id          String   @id @default(cuid())
+  userId      String?
+  points      Int
+  type        String // earned, redeemed
+  redeemedFor String? // free_tea, pool_session, merchandise, discount
+  createdAt   DateTime @default(now())
+
+  user Profile? @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+// Staff Management
+model Staff {
+  id        String   @id @default(cuid())
+  branchId  String?
+  userId    String? // If linked to a user
+  name      String
+  email     String   @unique
+  phone     String?
+  role      String // trainer, lifeguard, manager, staff
+  status    String   @default("active") // active, inactive, on_leave
+  hireDate  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch? @relation(fields: [branchId], references: [id])
+
+  @@index([email])
+}
+
+// Event Management
+model Event {
+  id          String   @id @default(cuid())
+  branchId    String?
+  title       String
+  description String?
+  type        String // birthday_party, family_event, wellness_workshop, swim_competition
+  date        DateTime
+  startTime   DateTime
+  endTime     DateTime
+  capacity    Int
+  registered  Int?     @default(0)
+  price       Float?
+  status      String   @default("upcoming") // upcoming, ongoing, completed, cancelled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  branch  Branch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+}
+
+model Ticket {
+  id          String   @id @default(cuid())
+  eventId     String
+  userId      String?
+  quantity    Int
+  totalAmount Float
+  status      String   @default("booked") // booked, cancelled, attended
+  createdAt   DateTime @default(now())
+
+  event Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  Profile? @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+// Notification System
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String?
+  title     String
+  message   String
+  channel   String // email, sms, whatsapp, push
+  type      String // booking_reminder, membership_expiry, rewards_earned, event_announcement
+  read      Boolean   @default(false)
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user Profile? @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, read])
 }
 
 // Workout Sessions
 model Workout {
-  id              String    @id @default(cuid())
-  userId          String    // FK to Profile.userId (Supabase auth.users.id)
-  profile         Profile   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  id              String   @id @default(cuid())
+  userId          String
   name            String
-  type            String    // cardio, strength, flexibility, hiit, yoga
+  type            String
   durationMinutes Int
   caloriesBurned  Int?
-  exercises       Json?     // Array of exercise objects
-  completedAt     DateTime  @default(now())
-  createdAt       DateTime  @default(now())
+  exercises       Json?
+  completedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  profile         Profile? @relation(fields: [profileUserId], references: [userId])
+  profileUserId   String?
 
   @@index([userId])
 }
 
+model WorkoutPlan {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  exercises     Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  profile       Profile? @relation(fields: [profileUserId], references: [userId])
+  profileUserId String?
+
+  @@index([userId])
+}
+
+// Exercise Records (AI Tracking)
+model ExerciseRecord {
+  id           String   @id @default(cuid())
+  userId       String
+  exerciseType String
+  repCount     Int
+  duration     Int
+  calories     Int?
+  formScore    Float?
+  formMetrics  Json?
+  recordedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  user Profile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, recordedAt])
+}
+
 // Meal Logging
 model Meal {
-  id          String    @id @default(cuid())
-  userId      String    // FK to Profile.userId (Supabase auth.users.id)
-  profile     Profile   @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  name        String
-  type        String    // breakfast, lunch, dinner, snack
-  calories    Int
-  protein     Float?
-  carbs       Float?
-  fats        Float?
-  ingredients Json?     // Array of ingredient objects
-  loggedAt    DateTime  @default(now())
-  createdAt   DateTime  @default(now())
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  type          String
+  calories      Int
+  protein       Float?
+  carbs         Float?
+  fats          Float?
+  ingredients   Json?
+  loggedAt      DateTime @default(now())
+  createdAt     DateTime @default(now())
+  profile       Profile? @relation(fields: [profileUserId], references: [userId])
+  profileUserId String?
 
   @@index([userId])
 }
 
 // Progress Tracking
 model Progress {
-  id                String    @id @default(cuid())
-  userId            String    // FK to Profile.userId (Supabase auth.users.id)
-  profile           Profile   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  id                String   @id @default(cuid())
+  userId            String
   weight            Float?
   bodyFatPercentage Float?
-  measurements      Json?     // { chest, waist, hips, arms, thighs }
+  measurements      Json?
   notes             String?
-  recordedAt        DateTime  @default(now())
-  createdAt         DateTime  @default(now())
-
-  @@index([userId])
-}
-
-// Workout Plans - saved workout configurations
-model WorkoutPlan {
-  id          String    @id @default(cuid())
-  userId      String    // FK to Profile.userId (Supabase auth.users.id)
-  profile     Profile   @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  name        String
-  exercises   Json      // Array of exercise objects: { type, targetReps, targetTime, difficulty }
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  recordedAt        DateTime @default(now())
+  createdAt         DateTime @default(now())
+  profile           Profile? @relation(fields: [profileUserId], references: [userId])
+  profileUserId     String?
 
   @@index([userId])
 }

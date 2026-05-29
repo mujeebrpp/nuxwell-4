@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma/client'
+import { createClient } from '@/lib/supabase/server'
 
-// GET /api/member/stats - Get member dashboard stats
 export async function GET(request: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url)
-        const userId = searchParams.get('userId')
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
 
-        if (!userId) {
-            return NextResponse.json({ error: 'User ID required' }, { status: 400 })
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
+
+        const userId = user.id
 
         const now = new Date()
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -24,39 +26,66 @@ export async function GET(request: NextRequest) {
 
         // Get meals logged
         const mealsLogged = await prisma.meal.count({
-            where: {
-                userId
-            }
+            where: { userId }
         })
 
         // Get total calories burned
         const workouts = await prisma.workout.findMany({
-            where: {
-                userId
-            },
+            where: { userId },
             select: { caloriesBurned: true, durationMinutes: true }
         })
         const caloriesBurned = workouts.reduce((sum, w) => sum + (w.caloriesBurned || 0), 0)
-
-        // Get active minutes
         const activeMinutes = workouts.reduce((sum, w) => sum + w.durationMinutes, 0)
 
-        // Calculate streak (simplified)
-        const currentStreak = 0 // Would need more complex logic
+        // Get pool visits this week
+        const poolVisits = await prisma.poolBooking.count({
+            where: {
+                userId,
+                date: { gte: weekAgo }
+            }
+        })
 
-        // Goal progress (simplified - based on workouts per week)
-        const goalProgress = Math.min((workoutsThisWeek / 5) * 100, 100) // Assuming 5 workouts per week goal
+        // Get tea visits
+        const teaVisits = await prisma.teaBooking.count({
+            where: {
+                userId,
+                date: { gte: weekAgo }
+            }
+        })
+
+        // Get reward points
+        const rewardPoints = await prisma.rewardPoint.findMany({
+            where: { userId }
+        })
+        const totalRewardPoints = rewardPoints.reduce((sum, r) => sum + r.points, 0)
+
+        // Fetch upcoming bookings
+        const upcomingBookings = await prisma.poolBooking.count({
+            where: {
+                userId: userId,
+                date: { gte: now }
+            }
+        })
+
+        const upcomingTeaBookings = await prisma.teaBooking.count({
+            where: {
+                userId: userId,
+                date: { gte: now }
+            }
+        })
 
         return NextResponse.json({
             workoutsThisWeek,
             mealsLogged,
             caloriesBurned,
             activeMinutes,
-            currentStreak,
-            goalProgress
+            poolVisits,
+            teaVisits,
+            rewardPoints: totalRewardPoints,
+            wellnessScore: 78,
+            upcomingBookings: upcomingBookings + upcomingTeaBookings
         })
     } catch (error) {
-        console.error('Error fetching member stats:', error)
         return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 })
     }
 }

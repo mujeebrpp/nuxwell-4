@@ -3,9 +3,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
-import { prisma } from '@/lib/prisma/client'
 
-export type Role = 'ADMIN' | 'TRAINER' | 'MEMBER' | 'USER'
+export type Role = 'ADMIN' | 'TRAINER' | 'LIFEGUARD' | 'MANAGER' | 'SUPERADMIN' | 'MEMBER' | 'USER'
 
 type AuthContextType = {
     user: User | null
@@ -37,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (data.profile) {
                     setProfile({
                         id: data.profile.userId,
-                        role: data.profile.role || 'USER',
+                        role: data.profile.role || 'MEMBER',
                         fullName: data.profile.fullName,
                         email: data.profile.email
                     })
@@ -79,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error }
     }
 
-    const signUp = async (email: string, password: string, fullName: string, role: Role = 'USER') => {
+    const signUp = async (email: string, password: string, fullName: string, role: Role = 'MEMBER') => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -122,9 +121,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return profile.role === roles
     }
 
-    const isAdmin = (): boolean => hasRole('ADMIN')
+    const isAdmin = (): boolean => hasRole('ADMIN') || hasRole('SUPERADMIN')
     const isTrainer = (): boolean => hasRole('TRAINER')
-    const isMember = (): boolean => hasRole('MEMBER')
+    const isMember = (): boolean => hasRole('MEMBER') || hasRole('USER')
 
     return (
         <AuthContext.Provider value={{
