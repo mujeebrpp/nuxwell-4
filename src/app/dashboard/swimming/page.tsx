@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { CheckCircle, ArrowLeft } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { CheckCircle, ArrowLeft, Shield } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useMediaPipePose } from '@/hooks/useMediaPipePose';
@@ -43,12 +43,14 @@ const swimmingAssessments: SwimmingAssessment[] = [
 export default function SwimmingPage() {
     const [selectedAssessment, setSelectedAssessment] = useState<SwimmingAssessment | null>(null);
     const [isAssessing, setIsAssessing] = useState(false);
+    const [timer, setTimer] = useState(0);
     const [swimScore, setSwimScore] = useState(100);
     const [results, setResults] = useState<Record<string, { score: number; time: number }>>({});
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const { isLoading, error, landmarks } = useMediaPipePose({
+    const { isLoading, isRunning, error, landmarks } = useMediaPipePose({
         videoRef,
         running: isAssessing,
         onPoseDetected: (landmarks) => {
@@ -63,9 +65,32 @@ export default function SwimmingPage() {
         },
     });
 
+    useEffect(() => {
+        if (isAssessing && isRunning) {
+            timerRef.current = setInterval(() => {
+                setTimer(prev => prev + 1);
+            }, 1000);
+        } else {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+        }
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
+    }, [isAssessing, isRunning]);
+
+    const readinessScore = results.shoulder_mobility?.score !== undefined
+        ? Math.round((Object.values(results).reduce((sum, r) => sum + r.score, 0) / swimmingAssessments.length))
+        : null;
+
     const startAssessment = (assessment: SwimmingAssessment) => {
         setSelectedAssessment(assessment);
         setIsAssessing(true);
+        setTimer(0);
         setSwimScore(100);
     };
 
@@ -119,11 +144,13 @@ export default function SwimmingPage() {
                                     <h3 className="font-semibold text-slate-900">{assessment.name}</h3>
                                 </div>
                                 <p className="text-sm text-slate-600 mb-4">{assessment.description}</p>
-                                {results[assessment.id] ? (
-                                    <div className="flex items-center gap-2 text-emerald-600">
-                                        <CheckCircle className="w-5 h-5" />
-                                        <span className="font-medium">Score: {results[assessment.id]}%</span>
-                                    </div>
+{results[assessment.id] ? (
+                                        <div className="flex items-center gap-2 text-emerald-600">
+                                            <CheckCircle className="w-5 h-5" />
+                                            <span className="font-medium">
+                                                Score: {results[assessment.id].score}% ({results[assessment.id].time}s)
+                                            </span>
+                                        </div>
                                 ) : (
                                     <Button className="w-full bg-emerald-500 hover:bg-emerald-600">
                                         Start Assessment
@@ -151,7 +178,7 @@ export default function SwimmingPage() {
                                     videoRef={videoRef}
                                     canvasRef={canvasRef}
                                     landmarks={landmarks}
-                                    isRunning={isAssessing}
+                                    isRunning={isRunning}
                                     width={720}
                                     height={1280}
                                     showSkeleton={true}
@@ -172,6 +199,9 @@ export default function SwimmingPage() {
                             <p className="text-slate-600 mb-4">{selectedAssessment?.instruction}</p>
                             
                             <div className="flex gap-3 mb-4">
+                                <div className="flex-1 bg-slate-100 rounded-lg p-3">
+                                    <p className="text-sm font-medium text-slate-700">Time: {timer}s</p>
+                                </div>
                                 <div className="flex-1 bg-blue-100 rounded-lg p-3">
                                     <p className="text-sm font-medium text-blue-700">Swimming Score: {swimScore}%</p>
                                 </div>

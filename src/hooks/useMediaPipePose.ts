@@ -32,7 +32,7 @@ export function useMediaPipePose({
     autoLoadSettings = true,
     videoRef,
 }: UseMediaPipePoseOptions): UseMediaPipePoseReturn {
-    const [settings, setSettings] = useState(typeof defaultMediaPipeSettings);
+    const [settings, setSettings] = useState(defaultMediaPipeSettings);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isRunning, setIsRunning] = useState(false);
