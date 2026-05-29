@@ -11,6 +11,8 @@ type AuthContextType = {
     profile: { id: string; role: Role; fullName: string | null; email: string } | null
     loading: boolean
     role: Role | null
+    familyMembers: any[]
+    families: any[]
     signIn: (email: string, password: string) => Promise<{ error: Error | null }>
     signUp: (email: string, password: string, fullName: string, role?: Role) => Promise<{ error: Error | null }>
     signOut: () => Promise<void>
@@ -26,6 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [profile, setProfile] = useState<{ id: string; role: Role; fullName: string | null; email: string } | null>(null)
     const [loading, setLoading] = useState(true)
+    const [familyMembers, setFamilyMembers] = useState<any[]>([])
+    const [families, setFamilies] = useState<any[]>([])
     const supabase = createClient()
 
     const fetchProfile = async (userId: string) => {
@@ -47,12 +51,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    const fetchFamilyData = async (userId: string) => {
+        try {
+            const res = await fetch(`/api/families?userId=${userId}`)
+            if (res.ok) {
+                const data = await res.json()
+                if (Array.isArray(data) && data.length > 0) {
+                    const userFamilies = data.map((family: any) => ({
+                        id: family.id,
+                        name: family.name,
+                        primaryGuardianId: family.primaryGuardianId
+                    }))
+                    setFamilies(userFamilies)
+                    setFamilyMembers(data[0].members || [])
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching family data:', error)
+        }
+    }
+
     useEffect(() => {
         const getUser = async () => {
             const { data: { user } } = await supabase.auth.getUser()
             setUser(user)
             if (user) {
                 await fetchProfile(user.id)
+                await fetchFamilyData(user.id)
             }
             setLoading(false)
         }
@@ -64,8 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(currentUser)
             if (currentUser) {
                 await fetchProfile(currentUser.id)
+                await fetchFamilyData(currentUser.id)
             } else {
                 setProfile(null)
+                setFamilyMembers([])
+                setFamilies([])
             }
             setLoading(false)
         })
@@ -131,6 +159,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             profile,
             loading,
             role: profile?.role || null,
+            familyMembers,
+            families,
             signIn,
             signUp,
             signOut,

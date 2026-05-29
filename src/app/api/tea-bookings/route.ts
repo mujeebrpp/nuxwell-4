@@ -10,18 +10,21 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url)
         const id = searchParams.get('id')
         const userId = user?.id || searchParams.get('userId')
+        const familyId = searchParams.get('familyId')
         const date = searchParams.get('date')
         const upcoming = searchParams.get('upcoming')
 
         const now = new Date()
-        const where: any = { userId }
+        const where: any = {}
+        if (userId) where.userId = userId
+        if (familyId) where.familyId = familyId
         if (id) where.id = id
         if (date) where.date = new Date(date)
         if (upcoming === 'true') where.date = { gte: now }
 
         const bookings = await prisma.teaBooking.findMany({
             where,
-            include: { user: true, table: true, membership: true },
+            include: { user: true, table: true, membership: true, family: true, orderItems: { include: { menu: true } } },
             orderBy: { date: 'desc' },
         })
 
@@ -39,22 +42,29 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { userId, membershipId, tableId, date, startTime, endTime, groupSize, foodOrder } = body
+        const { userId, familyId, membershipId, tableId, date, startTime, endTime, groupSize, specialRequest, depositAmount, depositPaid, foodOrder } = body
 
-        if (!userId || !tableId || !startTime || !endTime) {
-            return NextResponse.json({ error: 'userId, tableId, startTime, and endTime are required' }, { status: 400 })
+        if (!userId && !familyId) {
+            return NextResponse.json({ error: 'userId or familyId is required' }, { status: 400 })
+        }
+        if (!tableId || !startTime || !endTime) {
+            return NextResponse.json({ error: 'tableId, startTime, and endTime are required' }, { status: 400 })
         }
 
         const booking = await prisma.teaBooking.create({
             data: {
                 userId,
+                familyId,
                 membershipId,
                 tableId,
                 date: date ? new Date(date) : new Date(),
                 startTime: new Date(startTime),
                 endTime: new Date(endTime),
-                groupSize,
-                foodOrder,
+                groupSize: groupSize || 2,
+                specialRequest,
+                depositAmount: depositAmount || 0,
+                depositPaid: depositPaid || false,
+                foodOrder: foodOrder || {},
             },
         })
         return NextResponse.json(booking, { status: 201 })
@@ -66,13 +76,19 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json()
-        const { id, status } = body
+        const { id, status, depositPaid, foodOrder, specialRequest } = body
 
         if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
+        const updateData: any = {}
+        if (status !== undefined) updateData.status = status
+        if (depositPaid !== undefined) updateData.depositPaid = depositPaid
+        if (foodOrder !== undefined) updateData.foodOrder = foodOrder
+        if (specialRequest !== undefined) updateData.specialRequest = specialRequest
+
         const booking = await prisma.teaBooking.update({
             where: { id },
-            data: { status },
+            data: updateData,
         })
         return NextResponse.json(booking)
     } catch (error) {
