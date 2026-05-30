@@ -11,7 +11,9 @@ import {
     BarChart3,
     Dumbbell,
     Utensils,
-    Calendar
+    Calendar,
+    Database,
+    KeyRound,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -22,7 +24,12 @@ const adminLinks = [
     { href: '/dashboard/admin/workouts', label: 'All Workouts', icon: Dumbbell },
     { href: '/dashboard/admin/meals', label: 'All Meals', icon: Utensils },
     { href: '/dashboard/admin/calendar', label: 'Calendar', icon: Calendar },
-    { href: '/dashboard/admin/settings', label: 'Settings', icon: Settings },
+]
+
+const superadminLinks = [
+    { href: '/dashboard/admin/settings', label: 'System Settings', icon: Settings },
+    { href: '/dashboard/admin/database', label: 'Database', icon: Database },
+    { href: '/dashboard/admin/api-keys', label: 'API Keys', icon: KeyRound },
 ]
 
 export default function AdminLayout({
@@ -34,7 +41,7 @@ export default function AdminLayout({
     const router = useRouter()
 
     useEffect(() => {
-        if (!loading && (!profile || profile.role !== 'ADMIN')) {
+        if (!loading && (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SUPERADMIN'))) {
             router.push('/dashboard')
         }
     }, [profile, loading, router])
@@ -47,7 +54,7 @@ export default function AdminLayout({
         )
     }
 
-    if (!profile || profile.role !== 'ADMIN') {
+    if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SUPERADMIN')) {
         return null
     }
 
@@ -74,6 +81,21 @@ export default function AdminLayout({
                             {link.label}
                         </Link>
                     ))}
+                    {profile?.role === 'SUPERADMIN' && (
+                        <>
+                            <div className="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">SUPERADMIN</div>
+                            {superadminLinks.map((link) => (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+                                >
+                                    <link.icon className="w-5 h-5" />
+                                    {link.label}
+                                </Link>
+                            ))}
+                        </>
+                    )}
                 </nav>
                 <div className="p-4 border-t border-slate-800">
                     <div className="flex items-center gap-3 px-4 py-3">
@@ -86,7 +108,7 @@ export default function AdminLayout({
                             <p className="text-sm font-medium truncate">
                                 {profile.fullName || profile.email.split('@')[0]}
                             </p>
-                            <p className="text-xs text-emerald-400">ADMIN</p>
+                            <p className="text-xs text-emerald-400">{profile.role}</p>
                         </div>
                     </div>
                 </div>

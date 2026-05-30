@@ -11,7 +11,12 @@ import {
     Activity,
     Calendar,
     ArrowUpRight,
-    ArrowDownRight
+    ArrowDownRight,
+    Shield,
+    Settings,
+    Database,
+    KeyRound,
+    BarChart3,
 } from 'lucide-react'
 
 interface Stats {
@@ -31,7 +36,7 @@ export default function AdminDashboardPage() {
         totalMeals: 0,
         activeUsers: 0,
         workoutsThisWeek: 0,
-        mealsThisWeek: 0
+        mealsThisWeek: 0,
     })
     const [loading, setLoading] = useState(true)
 
@@ -59,7 +64,7 @@ export default function AdminDashboardPage() {
             icon: Users,
             change: '+12%',
             trend: 'up',
-            color: 'bg-blue-500'
+            color: 'bg-blue-500',
         },
         {
             title: 'Active Users',
@@ -67,7 +72,7 @@ export default function AdminDashboardPage() {
             icon: Activity,
             change: '+8%',
             trend: 'up',
-            color: 'bg-emerald-500'
+            color: 'bg-emerald-500',
         },
         {
             title: 'Workouts This Week',
@@ -75,7 +80,7 @@ export default function AdminDashboardPage() {
             icon: Dumbbell,
             change: '+24%',
             trend: 'up',
-            color: 'bg-purple-500'
+            color: 'bg-purple-500',
         },
         {
             title: 'Meals Logged This Week',
@@ -83,9 +88,42 @@ export default function AdminDashboardPage() {
             icon: Utensils,
             change: '+15%',
             trend: 'up',
-            color: 'bg-orange-500'
+            color: 'bg-orange-500',
         },
     ]
+
+    const superadminCards = profile?.role === 'SUPERADMIN'
+        ? [
+            {
+                title: 'System Settings',
+                href: '/dashboard/admin/settings',
+                icon: Settings,
+                color: 'bg-slate-700',
+                description: 'Configure system-wide settings',
+            },
+            {
+                title: 'Database Management',
+                href: '/dashboard/admin/database',
+                icon: Database,
+                color: 'bg-indigo-500',
+                description: 'Manage database and migrations',
+            },
+            {
+                title: 'API Keys',
+                href: '/dashboard/admin/api-keys',
+                icon: KeyRound,
+                color: 'bg-purple-500',
+                description: 'Manage API keys and integrations',
+            },
+            {
+                title: 'System Analytics',
+                href: '/dashboard/admin/analytics',
+                icon: BarChart3,
+                color: 'bg-cyan-500',
+                description: 'View detailed system analytics',
+            },
+        ]
+        : []
 
     return (
         <div className="space-y-8">
@@ -94,7 +132,6 @@ export default function AdminDashboardPage() {
                 <p className="text-slate-600 mt-2">Welcome back, {profile?.fullName || 'Admin'}!</p>
             </div>
 
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statCards.map((stat, index) => (
                     <Card key={index} className="overflow-hidden">
@@ -123,7 +160,25 @@ export default function AdminDashboardPage() {
                 ))}
             </div>
 
-            {/* Quick Actions */}
+            {superadminCards.length > 0 && (
+                <div className="space-y-4">
+                    <h2 className="text-xl font-semibold text-slate-900">SUPERADMIN Features</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {superadminCards.map((card, index) => (
+                            <a
+                                key={index}
+                                href={card.href}
+                                className={`p-6 rounded-xl ${card.color} text-white hover:opacity-90 transition-all`}
+                            >
+                                <card.icon className="w-8 h-8 mb-3" />
+                                <h3 className="font-bold text-lg">{card.title}</h3>
+                                <p className="text-sm opacity-90">{card.description}</p>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader>

@@ -22,6 +22,7 @@ import {
     Activity,
     Target,
     ArrowLeftRight,
+    Shield,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/lib/hooks/use-auth'
@@ -46,7 +47,7 @@ const sidebarLinks = [
 
 export function Sidebar() {
     const pathname = usePathname()
-    const { user, profile, signOut } = useAuth()
+    const { user, profile, signOut, hasRole } = useAuth()
     const router = useRouter()
     const [isMobileOpen, setIsMobileOpen] = useState(false)
 
@@ -91,6 +92,23 @@ export function Sidebar() {
                     )
                 })}
             </nav>
+
+            {hasRole(['ADMIN', 'SUPERADMIN']) && (
+                <nav className="flex-1 space-y-1 p-4">
+                    <div className="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Admin Panel</div>
+                    <Link
+                        href="/dashboard/admin"
+                        onClick={() => setIsMobileOpen(false)}
+                        className={`flex items-center gap-3 rounded-2xl px-4 py-3 font-medium transition-all ${pathname === '/dashboard/admin' || pathname?.startsWith('/dashboard/admin')
+                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
+                            : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
+                            }`}
+                    >
+                        <Shield className="h-5 w-5" />
+                        Admin Panel
+                    </Link>
+                </nav>
+            )}
 
             <div className="border-t border-slate-200 p-4 space-y-2">
                 {user && (
