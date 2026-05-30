@@ -24,19 +24,19 @@ export default function DashboardLayout({
             const pathname = window.location.pathname
 
             if (hasRole(['ADMIN', 'SUPERADMIN', 'MANAGER'])) {
-                if (!pathname.startsWith('/dashboard/admin')) {
+                if (!pathname.startsWith('/dashboard/admin') && !pathname.startsWith('/dashboard/family')) {
                     router.push('/dashboard/admin')
                 }
             } else if (profile.role === 'TRAINER') {
-                if (!pathname.startsWith('/dashboard/trainer')) {
+                if (!pathname.startsWith('/dashboard/trainer') && !pathname.startsWith('/dashboard/family')) {
                     router.push('/dashboard/trainer')
                 }
             } else if (profile.role === 'LIFEGUARD') {
-                if (!pathname.startsWith('/dashboard/lifeguard')) {
+                if (!pathname.startsWith('/dashboard/lifeguard') && !pathname.startsWith('/dashboard/family')) {
                     router.push('/dashboard/lifeguard')
                 }
             } else if (profile.role === 'MEMBER' || profile.role === 'USER') {
-                if (!pathname.startsWith('/dashboard/member')) {
+                if (!pathname.startsWith('/dashboard/member') && !pathname.startsWith('/dashboard/family')) {
                     router.push('/dashboard/member')
                 }
             }

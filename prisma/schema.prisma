@@ -33,9 +33,9 @@ model Profile {
   weightUnit  String?   @default("kg")
   height      Float?
   fitnessGoal String?
-role        Role      @default(MEMBER)
-    isActive    Boolean   @default(true)
-    createdAt   DateTime  @default(now())
+  role        Role      @default(MEMBER)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   // Family relations
@@ -63,6 +63,10 @@ role        Role      @default(MEMBER)
 
   // Trainer bookings
   trainerBookings TrainingBooking[] @relation("TrainerBookingsRelation")
+
+  // Family Bookings
+  familyBookings        FamilyBooking[]
+  familyTrainerBookings FamilyBooking[] @relation("FamilyBookingTrainer")
 
   // Rewards
   rewardPoints       RewardPoint[]
@@ -100,6 +104,7 @@ model Family {
   teaPackageRedemptions TeaPackageRedemption[]
   rewardTransactions    FamilyRewardTransaction[]
   pollBookings          PollBooking[]
+  familyBookings        FamilyBooking[]
 }
 
 model FamilyMember {
@@ -140,23 +145,24 @@ model Membership {
 
 // Multi-Branch Support
 model Branch {
-  id        String   @id @default(cuid())
-  name      String
-  address   String
-  phone     String?
-  email     String?
-  capacity  Int? // Max members
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+   id        String   @id @default(cuid())
+   name      String
+   address   String
+   phone     String?
+   email     String?
+   capacity  Int? // Max members
+   createdAt DateTime @default(now())
+   updatedAt DateTime @default(now())
 
-  pools       Pool[]
-  teaTables   TeaTable[]
-  polls       Poll[]
-  staff       Staff[]
-  memberships Membership[]
-  events      Event[]
-  lockers     Locker[]
-  equipment   Equipment[]
+   pools       Pool[]
+   teaTables   TeaTable[]
+   polls       Poll[]
+   workoutPlaces WorkoutPlace[]
+   staff       Staff[]
+   memberships Membership[]
+   events      Event[]
+   lockers     Locker[]
+   equipment   Equipment[]
 }
 
 // Pool System
@@ -172,9 +178,10 @@ model Pool {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  branch   Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  lanes    PoolLane[]
-  bookings PoolBooking[]
+  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  lanes          PoolLane[]
+  bookings       PoolBooking[]
+  familyBookings FamilyBooking[]
 }
 
 model PoolLane {
@@ -185,8 +192,9 @@ model PoolLane {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  pool     Pool          @relation(fields: [poolId], references: [id], onDelete: Cascade)
-  bookings PoolBooking[]
+  pool           Pool            @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  bookings       PoolBooking[]
+  familyBookings FamilyBooking[]
 }
 
 // Pool Booking
@@ -222,9 +230,10 @@ model TeaTable {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  branch   Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  bookings TeaBooking[]
-  sessions TeaSession[]
+  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  bookings       TeaBooking[]
+  sessions       TeaSession[]
+  familyBookings FamilyBooking[]
 }
 
 model TeaBooking {
@@ -246,10 +255,10 @@ model TeaBooking {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user       Profile?        @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  membership Membership?    @relation(fields: [membershipId], references: [id], onDelete: Cascade)
-  family     Family?        @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  table      TeaTable       @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  user       Profile?         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  membership Membership?      @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  family     Family?          @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  table      TeaTable         @relation(fields: [tableId], references: [id], onDelete: Cascade)
   orderItems TeaOrderItem[]
   slots      TeaBookingSlot[]
 
@@ -367,39 +376,54 @@ model TeaPackageRedemption {
   @@index([packageId])
 }
 
-model Poll {
-  id          String   @id @default(cuid())
-  branchId    String
-  name        String
-  capacity    Int
-  location    String
-  status      String   @default("available")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+// Workout Place System
+model WorkoutPlace {
+   id          String   @id @default(cuid())
+   branchId    String
+   name        String
+   capacity    Int
+   location    String
+   status      String   @default("available") // available, occupied, maintenance
+   createdAt   DateTime @default(now())
+   updatedAt   DateTime @default(now())
 
-  branch   Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  bookings PollBooking[]
+   branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+   familyBookings FamilyBooking[]
+}
+
+model Poll {
+   id        String   @id @default(cuid())
+   branchId  String
+   name      String
+   capacity  Int
+   location  String
+   status    String   @default("available")
+   createdAt DateTime @default(now())
+   updatedAt DateTime @default(now())
+
+   branch   Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+   bookings PollBooking[]
 }
 
 model PollBooking {
-  id           String   @id @default(cuid())
-  userId       String?
-  familyId     String?
-  membershipId String?
-  pollId       String
-  date         DateTime
-  startTime    DateTime
-  endTime      DateTime
-  groupSize    Int
+  id             String   @id @default(cuid())
+  userId         String?
+  familyId       String?
+  membershipId   String?
+  pollId         String
+  date           DateTime
+  startTime      DateTime
+  endTime        DateTime
+  groupSize      Int
   specialRequest String?
-  status       String   @default("confirmed")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  status         String   @default("confirmed")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user            Profile?        @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  membership      Membership?     @relation(fields: [membershipId], references: [id], onDelete: Cascade)
-  family          Family?         @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  poll            Poll            @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user       Profile?    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  membership Membership? @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  family     Family?     @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  poll       Poll        @relation(fields: [pollId], references: [id], onDelete: Cascade)
 
   @@index([date, pollId])
   @@index([userId, date])
@@ -627,6 +651,40 @@ model WorkoutPlan {
   profileUserId String?
 
   @@index([userId])
+}
+
+// Family Booking - Combined booking for family groups (4-8 people)
+model FamilyBooking {
+  id              String   @id @default(cuid())
+  familyId        String
+  userId          String // booking user (primary guardian)
+  date            DateTime
+  startTime       DateTime
+  endTime         DateTime
+  groupSize       Int      @default(4) // 4-8 people
+  poolId          String?
+  poolLaneId      String?
+  teaTableId      String?
+  trainerId       String? // optional shared trainer
+  workoutPlaceId  String? // workout area booking
+  status          String   @default("confirmed") // confirmed, cancelled, completed, no_show
+  specialRequest  String?
+  trainerOptional Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+family   Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+   user     Profile   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+   pool     Pool?     @relation(fields: [poolId], references: [id], onDelete: Cascade)
+   poolLane PoolLane? @relation(fields: [poolLaneId], references: [id], onDelete: Cascade)
+   teaTable TeaTable? @relation(fields: [teaTableId], references: [id], onDelete: Cascade)
+   trainer  Profile?  @relation("FamilyBookingTrainer", fields: [trainerId], references: [userId], onDelete: Cascade)
+   workoutPlace WorkoutPlace? @relation(fields: [workoutPlaceId], references: [id], onDelete: Cascade)
+
+  @@index([familyId, date])
+  @@index([userId, date])
+  @@index([date, poolId])
+  @@index([status])
 }
 
 // Exercise Records (AI Tracking)

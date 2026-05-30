@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Users, Plus, Crown, UserPlus, Award, Calendar } from 'lucide-react'
+import { Users, Plus, Crown, UserPlus, Award, Calendar, Waves, Coffee, Dumbbell } from 'lucide-react'
 
 interface FamilyMember {
     userId: string
@@ -54,12 +54,20 @@ export default function FamilyPage() {
                     <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">My Family</h1>
                     <p className="text-slate-600 mt-1">Manage family members and shared wellness</p>
                 </div>
-                <a href="/dashboard/family/invite">
-                    <Button className="bg-emerald-600 hover:bg-emerald-700">
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Invite Member
-                    </Button>
-                </a>
+                <div className="flex gap-2">
+                    <a href="/dashboard/family/book">
+                        <Button className="bg-emerald-600 hover:bg-emerald-700">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Book Family Session
+                        </Button>
+                    </a>
+                    <a href="/dashboard/family/invite">
+                        <Button className="bg-emerald-600 hover:bg-emerald-700">
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Invite Member
+                        </Button>
+                    </a>
+                </div>
             </div>
 
             {loading ? (
@@ -142,8 +150,103 @@ export default function FamilyPage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Family Bookings History */}
+                    <FamilyBookingsList />
                 </>
             )}
+        </div>
+    )
+}
+
+interface FamilyBooking {
+     id: string
+     date: string
+     startTime: string
+     endTime: string
+     groupSize: number
+     status: string
+     pool?: { name: string } | null
+     poolLane?: { laneNumber: number } | null
+     teaTable?: { tableNumber: number } | null
+     workoutPlace?: { name: string } | null
+}
+
+function FamilyBookingsList() {
+    const { profile } = useAuth()
+    const [bookings, setBookings] = useState<FamilyBooking[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchBookings = async () => {
+            try {
+                const res = await fetch(`/api/families?userId=${profile?.id}`)
+                if (res.ok) {
+                    const families = await res.json()
+                    if (families && families.length > 0) {
+                        const familyBookings = await fetch(`/api/family-bookings?familyId=${families[0].id}`)
+                        if (familyBookings.ok) {
+                            const data = await familyBookings.json()
+                            setBookings(data)
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching family bookings:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        if (profile?.id) {
+            fetchBookings()
+        }
+    }, [profile?.id])
+
+    if (loading) return null
+
+    if (bookings.length === 0) return null
+
+    return (
+        <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Family Activity Bookings
+            </h2>
+            <div className="space-y-2">
+                {bookings.map((booking) => (
+                    <Card key={booking.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <Waves className="h-4 w-4 text-blue-500" />
+                                        <Coffee className="h-4 w-4 text-amber-500" />
+                                        <Dumbbell className="h-4 w-4 text-purple-500" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-slate-900">
+                                            {new Date(booking.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                        </p>
+<p className="text-sm text-slate-500">
+                                             {booking.groupSize} people
+                                             {booking.pool?.name && ` • Pool: ${booking.pool.name}${booking.poolLane ? ` (Lane ${booking.poolLane.laneNumber})` : ''}`}
+                                             {booking.teaTable && ` • Table: ${booking.teaTable.tableNumber}`}
+                                             {booking.workoutPlace && ` • Workout: ${booking.workoutPlace.name}`}
+                                         </p>
+                                    </div>
+                                </div>
+                                <span className={`text-xs px-2 py-1 rounded-full capitalize ${
+                                    booking.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' :
+                                    booking.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                    'bg-slate-100 text-slate-700'
+                                }`}>
+                                    {booking.status}
+                                </span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
         </div>
     )
 }

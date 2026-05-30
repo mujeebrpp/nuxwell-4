@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Mail, Scale, Ruler, Target, Save, Shield, ArrowRight } from 'lucide-react'
+import { User, Mail, Scale, Ruler, Target, Save, Shield, Users, Calendar } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -50,8 +50,8 @@ export default function ProfilePage() {
     })
     const [saving, setSaving] = useState(false)
     const [successMessage, setSuccessMessage] = useState('')
-    const [upgradeRequesting, setUpgradeRequesting] = useState(false)
     const [roleLoading, setRoleLoading] = useState(true)
+    const [families, setFamilies] = useState<any[]>([])
     const supabase = createClient()
 
     useEffect(() => {
@@ -75,6 +75,17 @@ export default function ProfilePage() {
         }
         getUser()
     }, [supabase])
+
+    useEffect(() => {
+        if (user?.id) {
+            fetch(`/api/families?userId=${user.id}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) setFamilies(data)
+                })
+                .catch(() => {})
+        }
+    }, [user?.id])
 
     const handleSave = async () => {
         setSaving(true)
@@ -128,33 +139,6 @@ export default function ProfilePage() {
         }
     }
 
-    const handleUpgradeRequest = async () => {
-        setUpgradeRequesting(true)
-        setSuccessMessage('')
-
-        try {
-            const response = await fetch('/api/profile/upgrade-request', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: user?.id,
-                }),
-            })
-
-            if (response.ok) {
-                setSuccessMessage('Upgrade request submitted! A member will review your request.')
-            } else {
-                const errorData = await response.json()
-                setSuccessMessage(`Error: ${errorData.error || 'Failed to submit request'}`)
-            }
-        } catch (error) {
-            console.error('Error requesting upgrade:', error)
-            setSuccessMessage('Error submitting upgrade request. Please try again.')
-        } finally {
-            setUpgradeRequesting(false)
-        }
-    }
-
     const currentRoleConfig = roleConfig[profile.role as keyof typeof roleConfig] || roleConfig.USER
 
     return (
@@ -167,7 +151,7 @@ export default function ProfilePage() {
             {successMessage && (
                 <div className={`px-4 py-3 rounded-lg ${successMessage.includes('Error')
                         ? 'bg-red-50 border border-red-200 text-red-700'
-                        : 'bg-green-50 border border-green-200 text-green-700'
+                        : 'bg-green-50 border border-green-200 text-emerald-700'
                     }`}>
                     {successMessage}
                 </div>
@@ -247,30 +231,42 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             </div>
-                            {profile.role === 'USER' && (
-                                <div className="mt-4 pt-4 border-t border-blue-200">
-                                    <Button
-                                        onClick={handleUpgradeRequest}
-                                        disabled={upgradeRequesting}
-                                        variant="outline"
-                                        className="border-blue-300 text-blue-700 hover:bg-blue-50"
-                                    >
-                                        <ArrowRight className="w-4 h-4 mr-2" />
-                                        {upgradeRequesting ? 'Sending Request...' : 'Request to Member Upgrade'}
-                                    </Button>
-                                </div>
-                            )}
-                            {profile.role === 'PENDING_MEMBER' && (
-                                <div className="mt-4 pt-4 border-t border-amber-200">
-                                    <p className="text-sm text-amber-700">
-                                        Your membership upgrade request is pending approval. Please contact support for more information.
-                                    </p>
-                                </div>
-                            )}
                         </div>
                     )}
                 </CardContent>
             </Card>
+
+            {profile.role === 'MEMBER' && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Users className="w-5 h-5" />
+                            My Families
+                        </CardTitle>
+                        <CardDescription>Families you belong to or manage</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {families.length === 0 ? (
+                            <p className="text-slate-600">No families found. <a href="/dashboard/family/create" className="text-emerald-600 hover:underline">Create one</a>.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {families.map((family) => (
+                                    <a key={family.id} href="/dashboard/family" className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                                        <div>
+                                            <p className="font-medium text-slate-900">{family.name}</p>
+                                            <p className="text-sm text-slate-500">{family.members?.length || 0} members</p>
+                                        </div>
+                                        <Button size="sm" variant="outline">
+                                            <Calendar className="w-4 h-4 mr-2" />
+                                            Book Session
+                                        </Button>
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
 
             <Card>
                 <CardHeader>
