@@ -37,12 +37,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const response = await fetch(`/api/profile?userId=${userId}`)
             if (response.ok) {
                 const data = await response.json()
-                if (data.profile) {
+                if (data) {
                     setProfile({
-                        id: data.profile.userId,
-                        role: data.profile.role || 'MEMBER',
-                        fullName: data.profile.fullName,
-                        email: data.profile.email
+                        id: data.userId,
+                        role: data.role || 'MEMBER',
+                        fullName: data.fullName,
+                        email: data.email
                     })
                 }
             }
