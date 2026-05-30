@@ -19,6 +19,7 @@ import Link from 'next/link'
 
 const adminLinks = [
     { href: '/dashboard/admin', label: 'Overview', icon: BarChart3 },
+    { href: '/dashboard/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/dashboard/admin/users', label: 'User Management', icon: Users },
     { href: '/dashboard/admin/trainers', label: 'Trainers', icon: Shield },
     { href: '/dashboard/admin/workouts', label: 'All Workouts', icon: Dumbbell },
