@@ -1,11 +1,32 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Mail, Scale, Ruler, Target, Save } from 'lucide-react'
+import { User, Mail, Scale, Ruler, Target, Save, Shield, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
+
+const roleConfig = {
+    USER: {
+        label: 'User',
+        description: 'Basic access to the platform',
+        colors: 'bg-blue-50 border-blue-200 text-blue-700',
+        iconColor: 'text-blue-500',
+    },
+    MEMBER: {
+        label: 'Member',
+        description: 'Full membership with access to all facilities',
+        colors: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+        iconColor: 'text-emerald-500',
+    },
+    PENDING_MEMBER: {
+        label: 'Member (Pending)',
+        description: 'Upgrade request submitted, awaiting approval',
+        colors: 'bg-amber-50 border-amber-200 text-amber-700',
+        iconColor: 'text-amber-500',
+    },
+}
 
 const fitnessGoals = [
     { id: 'weight_loss', label: 'Weight Loss', icon: '📉' },
@@ -25,13 +46,17 @@ export default function ProfilePage() {
         weightUnit: 'kg',
         height: '',
         fitnessGoal: 'general_fitness',
+        role: 'USER',
     })
     const [saving, setSaving] = useState(false)
     const [successMessage, setSuccessMessage] = useState('')
+    const [upgradeRequesting, setUpgradeRequesting] = useState(false)
+    const [roleLoading, setRoleLoading] = useState(true)
     const supabase = createClient()
 
     useEffect(() => {
         const getUser = async () => {
+            setRoleLoading(true)
             const { data: { user } } = await supabase.auth.getUser()
             setUser(user)
             if (user) {
@@ -43,8 +68,10 @@ export default function ProfilePage() {
                     weightUnit: user.user_metadata?.weight_unit || 'kg',
                     height: user.user_metadata?.height?.toString() || '',
                     fitnessGoal: user.user_metadata?.fitness_goal || 'general_fitness',
+                    role: user.user_metadata?.role || 'USER',
                 }))
             }
+            setRoleLoading(false)
         }
         getUser()
     }, [supabase])
@@ -54,7 +81,6 @@ export default function ProfilePage() {
         setSuccessMessage('')
 
         try {
-            // Update Supabase auth user metadata
             const { error: authError } = await supabase.auth.updateUser({
                 data: {
                     full_name: profile.fullName,
@@ -70,7 +96,6 @@ export default function ProfilePage() {
                 throw authError
             }
 
-            // Also update in database via API
             if (user) {
                 const response = await fetch('/api/profile', {
                     method: 'PUT',
@@ -92,7 +117,6 @@ export default function ProfilePage() {
 
             setSuccessMessage('Profile updated successfully!')
 
-            // Clear success message after 3 seconds
             setTimeout(() => {
                 setSuccessMessage('')
             }, 3000)
@@ -104,9 +128,37 @@ export default function ProfilePage() {
         }
     }
 
+    const handleUpgradeRequest = async () => {
+        setUpgradeRequesting(true)
+        setSuccessMessage('')
+
+        try {
+            const response = await fetch('/api/profile/upgrade-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user?.id,
+                }),
+            })
+
+            if (response.ok) {
+                setSuccessMessage('Upgrade request submitted! A member will review your request.')
+            } else {
+                const errorData = await response.json()
+                setSuccessMessage(`Error: ${errorData.error || 'Failed to submit request'}`)
+            }
+        } catch (error) {
+            console.error('Error requesting upgrade:', error)
+            setSuccessMessage('Error submitting upgrade request. Please try again.')
+        } finally {
+            setUpgradeRequesting(false)
+        }
+    }
+
+    const currentRoleConfig = roleConfig[profile.role as keyof typeof roleConfig] || roleConfig.USER
+
     return (
         <div className="space-y-8 max-w-3xl">
-            {/* Header */}
             <div>
                 <h1 className="text-3xl font-bold text-slate-900">Profile</h1>
                 <p className="text-slate-600 mt-1">Manage your account and fitness preferences</p>
@@ -121,7 +173,6 @@ export default function ProfilePage() {
                 </div>
             )}
 
-            {/* Personal Information */}
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -164,7 +215,63 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
 
-            {/* Body Metrics */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Shield className="w-5 h-5" />
+                        Role & Access
+                    </CardTitle>
+                    <CardDescription>Your account type and permissions</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {roleLoading ? (
+                        <div className="animate-pulse flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-slate-200"></div>
+                            <div className="space-y-1">
+                                <div className="h-4 bg-slate-200 rounded w-24 mb-1"></div>
+                                <div className="h-3 bg-slate-200 rounded w-32"></div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className={`p-4 rounded-lg border-2 ${currentRoleConfig.colors}`}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentRoleConfig.iconColor} bg-white`}>
+                                        <Shield className={`w-5 h-5 ${currentRoleConfig.iconColor}`} />
+                                    </div>
+                                    <div>
+                                        <span className="font-medium text-slate-900">{currentRoleConfig.label}</span>
+                                        <p className="text-sm text-slate-600">
+                                            {currentRoleConfig.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {profile.role === 'USER' && (
+                                <div className="mt-4 pt-4 border-t border-blue-200">
+                                    <Button
+                                        onClick={handleUpgradeRequest}
+                                        disabled={upgradeRequesting}
+                                        variant="outline"
+                                        className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                                    >
+                                        <ArrowRight className="w-4 h-4 mr-2" />
+                                        {upgradeRequesting ? 'Sending Request...' : 'Request to Member Upgrade'}
+                                    </Button>
+                                </div>
+                            )}
+                            {profile.role === 'PENDING_MEMBER' && (
+                                <div className="mt-4 pt-4 border-t border-amber-200">
+                                    <p className="text-sm text-amber-700">
+                                        Your membership upgrade request is pending approval. Please contact support for more information.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -219,7 +326,6 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
 
-            {/* Fitness Goal */}
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -248,7 +354,6 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
 
-            {/* Save Button */}
             <div className="flex justify-end">
                 <Button onClick={handleSave} disabled={saving}>
                     <Save className="w-5 h-5 mr-2" />

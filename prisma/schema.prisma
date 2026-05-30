@@ -17,6 +17,8 @@ enum Role {
   MANAGER
   SUPERADMIN
   MEMBER
+  USER
+  PENDING_MEMBER
 }
 
 // User Profile - extends Supabase Auth
@@ -54,6 +56,7 @@ model Profile {
 
   // Bookings
   poolBookings             PoolBooking[]
+  pollBookings             PollBooking[]
   teaBookings              TeaBooking[]
   familyRewardTransactions FamilyRewardTransaction[]
 
@@ -95,6 +98,7 @@ model Family {
   teaSessions           TeaSession[]
   teaPackageRedemptions TeaPackageRedemption[]
   rewardTransactions    FamilyRewardTransaction[]
+  pollBookings          PollBooking[]
 }
 
 model FamilyMember {
@@ -129,6 +133,7 @@ model Membership {
   family          Family?       @relation(fields: [familyId], references: [id])
   bookings        PoolBooking[]
   teaBookings     TeaBooking[]
+  pollBookings    PollBooking[]
   teaBookingCount Int           @default(0)
 }
 
@@ -145,6 +150,7 @@ model Branch {
 
   pools       Pool[]
   teaTables   TeaTable[]
+  polls       Poll[]
   staff       Staff[]
   memberships Membership[]
   events      Event[]
@@ -222,7 +228,7 @@ model TeaTable {
 
 model TeaBooking {
   id             String   @id @default(cuid())
-  userId         String
+  userId         String?
   membershipId   String?
   familyId       String?
   tableId        String
@@ -235,20 +241,34 @@ model TeaBooking {
   depositAmount  Float?   @default(0)
   depositPaid    Boolean  @default(false)
   status         String   @default("confirmed")
+  isMultiSlot    Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user       Profile        @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  user       Profile?        @relation(fields: [userId], references: [userId], onDelete: Cascade)
   membership Membership?    @relation(fields: [membershipId], references: [id], onDelete: Cascade)
   family     Family?        @relation(fields: [familyId], references: [id], onDelete: Cascade)
   table      TeaTable       @relation(fields: [tableId], references: [id], onDelete: Cascade)
   orderItems TeaOrderItem[]
+  slots      TeaBookingSlot[]
 
   @@index([date, tableId])
   @@index([userId, date])
   @@index([familyId])
   @@index([status])
   @@index([date])
+}
+
+model TeaBookingSlot {
+  id        String   @id @default(cuid())
+  bookingId String
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime @default(now())
+
+  booking TeaBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
 }
 
 model TeaMenu {
@@ -344,6 +364,45 @@ model TeaPackageRedemption {
 
   @@index([familyId])
   @@index([packageId])
+}
+
+model Poll {
+  id          String   @id @default(cuid())
+  branchId    String
+  name        String
+  capacity    Int
+  location    String
+  status      String   @default("available")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  branch   Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  bookings PollBooking[]
+}
+
+model PollBooking {
+  id           String   @id @default(cuid())
+  userId       String?
+  familyId     String?
+  membershipId String?
+  pollId       String
+  date         DateTime
+  startTime    DateTime
+  endTime      DateTime
+  groupSize    Int
+  specialRequest String?
+  status       String   @default("confirmed")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user            Profile?        @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  membership      Membership?     @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  family          Family?         @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  poll            Poll            @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@index([date, pollId])
+  @@index([userId, date])
+  @@index([familyId])
 }
 
 // Training Booking

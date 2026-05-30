@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json()
-        const { userId, fullName, phone, dateOfBirth, weight, height, fitnessGoal, avatarUrl } = body
+        const { userId, fullName, phone, dateOfBirth, weight, height, fitnessGoal, avatarUrl, role } = body
 
         if (!userId) {
             return NextResponse.json({ error: 'userId is required' }, { status: 400 })
@@ -78,6 +78,7 @@ export async function PUT(request: NextRequest) {
                 height,
                 fitnessGoal,
                 avatarUrl,
+                role,
             },
         })
 

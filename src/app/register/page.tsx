@@ -3,16 +3,15 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Dumbbell, Mail, Lock, User, ArrowRight, Shield, User as UserIcon, Award } from 'lucide-react'
+import { Dumbbell, Mail, Lock, User, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { useAuth, Role } from '@/lib/hooks/use-auth'
+import { useAuth } from '@/lib/hooks/use-auth'
 
 export default function RegisterPage() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [fullName, setFullName] = useState('')
-    const [role, setRole] = useState<Role>('USER')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const { signUp } = useAuth()
@@ -23,7 +22,7 @@ export default function RegisterPage() {
         setError('')
         setLoading(true)
 
-        const { error } = await signUp(email, password, fullName, role)
+        const { error } = await signUp(email, password, fullName)
 
         if (error) {
             setError(error.message)
@@ -36,7 +35,6 @@ export default function RegisterPage() {
 
     return (
         <main className="min-h-screen flex items-center justify-center px-4 py-20">
-            {/* Background */}
             <div className="absolute inset-0 -z-10">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-amber-50" />
                 <div className="absolute top-20 right-0 w-96 h-96 bg-emerald-200/20 rounded-full blur-3xl" />
@@ -117,41 +115,6 @@ export default function RegisterPage() {
                                     minLength={6}
                                 />
                             </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Select Your Role
-                            </label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setRole('USER')}
-                                    className={`p-3 rounded-lg border-2 transition-all text-left ${role === 'USER'
-                                            ? 'border-emerald-500 bg-emerald-50'
-                                            : 'border-slate-200 hover:border-slate-300'
-                                        }`}
-                                >
-                                    <UserIcon className={`w-5 h-5 mb-1 ${role === 'USER' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                                    <p className={`font-medium text-sm ${role === 'USER' ? 'text-emerald-700' : 'text-slate-700'}`}>Free User</p>
-                                    <p className="text-xs text-slate-500">Basic access</p>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setRole('MEMBER')}
-                                    className={`p-3 rounded-lg border-2 transition-all text-left ${role === 'MEMBER'
-                                            ? 'border-emerald-500 bg-emerald-50'
-                                            : 'border-slate-200 hover:border-slate-300'
-                                        }`}
-                                >
-                                    <Award className={`w-5 h-5 mb-1 ${role === 'MEMBER' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                                    <p className={`font-medium text-sm ${role === 'MEMBER' ? 'text-emerald-700' : 'text-slate-700'}`}>Member</p>
-                                    <p className="text-xs text-slate-500">Full features</p>
-                                </button>
-                            </div>
-                            <p className="text-xs text-slate-500 mt-2">
-                                Note: Trainer and Admin roles require invitation
-                            </p>
                         </div>
 
                         <Button type="submit" className="w-full" disabled={loading}>

@@ -106,17 +106,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error }
     }
 
-    const signUp = async (email: string, password: string, fullName: string, role: Role = 'MEMBER') => {
+    const signUp = async (email: string, password: string, fullName: string) => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
-                data: { full_name: fullName, role },
+                data: { full_name: fullName, role: 'USER' },
             },
         })
 
         if (!error && data.user) {
-            // Create profile in database via API
             const response = await fetch('/api/profile', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -124,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     userId: data.user.id,
                     email,
                     fullName,
-                    role,
+                    role: 'USER',
                 }),
             })
 

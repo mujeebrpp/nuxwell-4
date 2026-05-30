@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
         const bookings = await prisma.teaBooking.findMany({
             where,
-            include: { user: true, table: true, membership: true, family: true, orderItems: { include: { menu: true } } },
+            include: { user: true, table: true, membership: true, family: true, orderItems: { include: { menu: true } }, slots: true },
             orderBy: { date: 'desc' },
         })
 
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { userId, familyId, membershipId, tableId, date, startTime, endTime, groupSize, specialRequest, depositAmount, depositPaid, foodOrder } = body
+        const { userId, familyId, membershipId, tableId, date, startTime, endTime, groupSize, specialRequest, depositAmount, depositPaid, foodOrder, isMultiSlot, slots } = body
 
         if (!userId && !familyId) {
             return NextResponse.json({ error: 'userId or familyId is required' }, { status: 400 })
@@ -51,22 +51,51 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'tableId, startTime, and endTime are required' }, { status: 400 })
         }
 
-        const booking = await prisma.teaBooking.create({
-            data: {
-                userId,
-                familyId,
-                membershipId,
-                tableId,
-                date: date ? new Date(date) : new Date(),
-                startTime: new Date(startTime),
-                endTime: new Date(endTime),
-                groupSize: groupSize || 2,
-                specialRequest,
-                depositAmount: depositAmount || 0,
-                depositPaid: depositPaid || false,
-                foodOrder: foodOrder || {},
-            },
-        })
+        const bookingData: any = {
+            userId,
+            familyId,
+            membershipId,
+            tableId,
+            date: date ? new Date(date) : new Date(),
+            startTime: new Date(startTime),
+            endTime: new Date(endTime),
+            groupSize: groupSize || 2,
+            specialRequest,
+            depositAmount: depositAmount || 0,
+            depositPaid: depositPaid || false,
+            foodOrder: foodOrder || {},
+            isMultiSlot: isMultiSlot || false,
+        }
+
+        let booking
+
+        if (isMultiSlot && slots && slots.length > 0) {
+            booking = await prisma.teaBooking.create({
+                data: {
+                    ...bookingData,
+                    slots: {
+                        create: slots.map((slot: { startTime: string; endTime: string }) => ({
+                            startTime: new Date(slot.startTime),
+                            endTime: new Date(slot.endTime),
+                        })),
+                    },
+                },
+                include: { slots: true },
+            })
+        } else {
+            booking = await prisma.teaBooking.create({
+                data: {
+                    ...bookingData,
+                    slots: {
+                        create: {
+                            startTime: new Date(startTime),
+                            endTime: new Date(endTime),
+                        },
+                    },
+                },
+                include: { slots: true },
+            })
+        }
         return NextResponse.json(booking, { status: 201 })
     } catch (error) {
         return NextResponse.json({ error: 'Failed to create tea booking' }, { status: 500 })
@@ -89,6 +118,7 @@ export async function PUT(request: NextRequest) {
         const booking = await prisma.teaBooking.update({
             where: { id },
             data: updateData,
+            include: { slots: true },
         })
         return NextResponse.json(booking)
     } catch (error) {
